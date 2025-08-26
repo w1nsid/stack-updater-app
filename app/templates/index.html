@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>Stack Updater Dashboard</title>
+    <link rel="stylesheet" href="/static/style.css" />
+</head>
+<body>
+    <div class="container">
+        <h1>Stack Updater Dashboard</h1>
+        <div class="actions">
+            <a href="/add" class="button">Add Stack</a>
+        </div>
+        {% if stacks %}
+        <table>
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Description</th>
+                    <th>Status</th>
+                    <th>Last Update (UTC)</th>
+                    <th>Auto-Update</th>
+                    <th>Interval (hrs)</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+            {% for stack in stacks %}
+                <tr>
+                    <td>{{ stack.name }}</td>
+                    <td>{{ stack.description }}</td>
+                    <td>{{ stack.status }}</td>
+                    <td>{% if stack.last_update %}{{ stack.last_update | replace('T', ' ') }}{% else %}N/A{% endif %}</td>
+                    <td>{% if stack.auto_enabled %}Enabled{% else %}Disabled{% endif %}</td>
+                    <td>{% if stack.interval %}{{ (stack.interval / 60) | round(2) }}{% else %}N/A{% endif %}</td>
+                    <td class="action-buttons">
+                        <form method="post" action="/update/{{ stack.id }}" style="display:inline;">
+                            <button type="submit">Update</button>
+                        </form>
+                        <a href="/edit/{{ stack.id }}" class="button">Edit</a>
+                        <form method="post" action="/delete/{{ stack.id }}" style="display:inline;" onsubmit="return confirm('Delete this stack?');">
+                            <button type="submit" class="danger">Delete</button>
+                        </form>
+                    </td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <p>No stacks configured. Click "Add Stack" to get started.</p>
+        {% endif %}
+    </div>
+</body>
+</html>

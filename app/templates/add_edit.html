@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>{% if stack %}Edit Stack{% else %}Add Stack{% endif %}</title>
+    <link rel="stylesheet" href="/static/style.css" />
+</head>
+<body>
+    <div class="container">
+        <h1>{% if stack %}Edit Stack{% else %}Add Stack{% endif %}</h1>
+        <form method="post" action="{% if stack %}/edit/{{ stack.id }}{% else %}/add{% endif %}">
+            <label for="name">Name:</label>
+            <input type="text" id="name" name="name" value="{{ stack.name if stack else '' }}" required />
+
+            <label for="description">Description:</label>
+            <textarea id="description" name="description" rows="3">{{ stack.description if stack else '' }}</textarea>
+
+            <label for="webhook">Webhook URL:</label>
+            <input type="text" id="webhook" name="webhook" value="{{ stack.webhook if stack else '' }}" required />
+
+            <div class="checkbox-row">
+                <input type="checkbox" id="auto_enabled" name="auto_enabled" {% if stack and stack.auto_enabled %}checked{% endif %} />
+                <label for="auto_enabled">Enable automatic updates</label>
+            </div>
+
+            <label for="interval_hours">Interval (hours):</label>
+            <input type="number" id="interval_hours" name="interval_hours" step="0.1" min="0" placeholder="e.g. 24 for daily" value="{{ stack.interval_hours if stack and stack.interval_hours is not none else '' }}" />
+
+            <button type="submit" class="primary">{% if stack %}Save Changes{% else %}Add Stack{% endif %}</button>
+            <a href="/" class="button">Cancel</a>
+        </form>
+    </div>
+</body>
+</html>
