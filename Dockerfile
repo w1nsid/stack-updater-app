@@ -1,19 +1,16 @@
-# Use official slim Python image for minimal footprint
-FROM python:3.11-slim
+# Use uv base image with Python 3.11 on Alpine
+FROM ghcr.io/astral-sh/uv:python3.11-alpine
 
-# Set working directory inside the container
 WORKDIR /app
 
-# Install required Python packages
-COPY requirements.txt ./
-RUN pip install --no-cache-dir --upgrade pip \
-    && pip install --no-cache-dir -r requirements.txt
+COPY pyproject.toml uv.lock ./
 
-# Copy application source code
+RUN uv sync --frozen --no-dev --compile-bytecode
+
 COPY app/ ./app/
+COPY main.py ./
 
-# Expose the port that the application will run on
 EXPOSE 8080
 
-# Default command: launch the FastAPI app with uvicorn
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8080"]
+# Launch the FastAPI app with uvicorn via uv (uses the synced venv)
+CMD ["uv", "run", "uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8080"]

@@ -22,31 +22,37 @@ button or when an automatic update interval elapses.
 - **Lightweight & Portable:** Built with FastAPI and SQLite for a small
   footprint. Deploy locally or as a Docker container with minimal overhead.
 
-## Running Locally
+## Running Locally (uv + pyproject)
 
-1. Ensure you have Python 3.11 or later installed.
-2. Install the dependencies in a virtual environment:
+We use uv with `pyproject.toml` and a checked-in `uv.lock` for fast, reproducible installs.
+
+1. Ensure Python 3.11+ is installed.
+2. Install deps with uv:
+
+   - Windows PowerShell:
+
+     ```powershell
+     ./scripts/install.ps1
+     ```
+
+   - macOS/Linux:
+
+     ```bash
+     ./scripts/install.sh
+     ```
+
+3. Run the app:
 
    ```bash
-   python -m venv venv
-   source venv/bin/activate
-   pip install --upgrade pip
-   pip install -r requirements.txt
+   uv run uvicorn app.main:app --reload --host 0.0.0.0 --port 8080
    ```
 
-3. Launch the application using uvicorn:
-
-   ```bash
-   uvicorn app.main:app --reload --host 0.0.0.0 --port 8080
-   ```
-
-4. Open your browser and navigate to `http://localhost:8080` to access the
-   dashboard.
+4. Open `http://localhost:8080`.
 
 The database file `database.db` will be created automatically in the `app/`
 directory on first run.
 
-## Using Docker
+## Using Docker (uv base image)
 
 To build and run the application as a Docker container:
 
@@ -63,6 +69,10 @@ docker run -d -p 8080:8080 \
   -v $(pwd)/data:/app/app \
   --name stack-updater stack-updater
 ```
+
+Notes:
+- The Dockerfile uses `ghcr.io/astral-sh/uv:python3.11-alpine` as base image.
+- Dependencies are resolved from `pyproject.toml` with `uv.lock` and installed via `uv sync --frozen`.
 
 ## Configuration
 
