@@ -1,54 +1,154 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="utf-8">
     <title>Stack Updater Dashboard</title>
     <link rel="stylesheet" href="/static/style.css" />
 </head>
+
 <body>
     <div class="container">
         <h1>Stack Updater Dashboard</h1>
         <div class="actions">
-            <a href="/add" class="button">Add Stack</a>
+            <button id="importBtn">Import from Portainer</button>
+            <button id="refreshAllBtn">Refresh All Status</button>
         </div>
-        {% if stacks %}
         <table>
             <thead>
                 <tr>
                     <th>Name</th>
-                    <th>Description</th>
-                    <th>Status</th>
-                    <th>Last Update (UTC)</th>
-                    <th>Auto-Update</th>
-                    <th>Interval (hrs)</th>
+                    <th>Type</th>
+                    <th>Image Status</th>
+                    <th>Last Checked</th>
+                    <th>Last Updated</th>
                     <th>Actions</th>
                 </tr>
             </thead>
-            <tbody>
-            {% for stack in stacks %}
-                <tr>
-                    <td>{{ stack.name }}</td>
-                    <td>{{ stack.description }}</td>
-                    <td>{{ stack.status }}</td>
-                    <td>{% if stack.last_update %}{{ stack.last_update | replace('T', ' ') }}{% else %}N/A{% endif %}</td>
-                    <td>{% if stack.auto_enabled %}Enabled{% else %}Disabled{% endif %}</td>
-                    <td>{% if stack.interval %}{{ (stack.interval / 60) | round(2) }}{% else %}N/A{% endif %}</td>
-                    <td class="action-buttons">
-                        <form method="post" action="/update/{{ stack.id }}" style="display:inline;">
-                            <button type="submit">Update</button>
-                        </form>
-                        <a href="/edit/{{ stack.id }}" class="button">Edit</a>
-                        <form method="post" action="/delete/{{ stack.id }}" style="display:inline;" onsubmit="return confirm('Delete this stack?');">
-                            <button type="submit" class="danger">Delete</button>
-                        </form>
-                    </td>
-                </tr>
-            {% endfor %}
+            <tbody id="stackTableBody">
             </tbody>
         </table>
-        {% else %}
-        <p>No stacks configured. Click "Add Stack" to get started.</p>
-        {% endif %}
     </div>
+    <script>
+        const statusClass = (s) => {
+            if (!s) return 'unknown';
+            const map = {
+                'Processing': 'processing',
+                'Preparing': 'processing',
+                'Updated': 'ok',
+                'Outdated': 'warn',
+                'Skipped': 'unknown',
+                'Error': 'error'
+            };
+            return map[s] || 'unknown';
+        };
+
+        function badge(status) {
+            const cls = statusClass(status);
+            const spinner = (cls === 'processing') ? '<span class="spinner" aria-hidden="true"></span>' : '';
+            return `<span class="badge ${cls}">${spinner}${status || 'n/a'}</span>`;
+        }
+
+        function fmt(dt) {
+            if (!dt) return 'N/A';
+            try { return new Date(dt).toLocaleString(); } catch { return dt; }
+        }
+
+        async function loadStacks() {
+            const res = await fetch('/api/stacks');
+            const data = await res.json();
+            const tbody = document.getElementById('stackTableBody');
+            tbody.innerHTML = '';
+            for (const s of data) {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${s.name}</td>
+                    <td>${s.type ?? ''}</td>
+                    <td data-col="indicator">${badge(s.image_status)}</td>
+                    <td data-col="lastChecked">${fmt(s.image_last_checked)}</td>
+                    <td>${fmt(s.last_updated_at)}</td>
+                    <td class="action-buttons">
+                        <button data-action="get" data-id="${s.id}">Get Status</button>
+                        <button data-action="refresh" data-id="${s.id}">Quick Refresh</button>
+                        <button data-action="update" data-id="${s.id}">Update</button>
+                    </td>`;
+                tbody.appendChild(tr);
+            }
+        }
+
+        async function importStacks() {
+            const btn = document.getElementById('importBtn');
+            btn.disabled = true; btn.textContent = 'Importing...';
+            try {
+                await fetch('/api/stacks/import');
+            } finally {
+                btn.disabled = false; btn.textContent = 'Import from Portainer';
+            }
+            await loadStacks();
+        }
+
+        async function getIndicator(id, refresh) {
+            const res = await fetch(`/api/stacks/${id}/indicator?refresh=${refresh ? 'true' : 'false'}`);
+            if (!res.ok) throw new Error('indicator failed');
+            return res.json();
+        }
+
+        async function updateStack(id) {
+            const res = await fetch(`/api/stacks/${id}/update`, { method: 'POST' });
+            if (!res.ok) throw new Error('update failed');
+            return res.json();
+        }
+
+        async function onTableClick(e) {
+            const btn = e.target.closest('button');
+            if (!btn) return;
+            const id = btn.getAttribute('data-id');
+            const action = btn.getAttribute('data-action');
+            const row = btn.closest('tr');
+            const indCell = row.querySelector('[data-col="indicator"]');
+            const lcCell = row.querySelector('[data-col="lastChecked"]');
+            try {
+                if (action === 'get') {
+                    indCell.innerHTML = badge('Processing');
+                    const r = await getIndicator(id, false);
+                    indCell.innerHTML = badge(r.status);
+                    lcCell.textContent = fmt(r.last_checked);
+                } else if (action === 'refresh') {
+                    indCell.innerHTML = badge('Processing');
+                    const r = await getIndicator(id, true);
+                    indCell.innerHTML = badge(r.status);
+                    lcCell.textContent = fmt(r.last_checked);
+                } else if (action === 'update') {
+                    indCell.innerHTML = badge('Processing');
+                    await updateStack(id);
+                    const r = await getIndicator(id, false);
+                    indCell.innerHTML = badge(r.status);
+                    lcCell.textContent = fmt(r.last_checked);
+                }
+            } catch (err) {
+                indCell.innerHTML = badge('Error');
+            }
+        }
+
+        document.getElementById('importBtn').addEventListener('click', importStacks);
+        document.getElementById('refreshAllBtn').addEventListener('click', async () => {
+            const rows = Array.from(document.querySelectorAll('#stackTableBody tr'));
+            for (const row of rows) {
+                const id = row.querySelector('button[data-action]')?.getAttribute('data-id');
+                if (!id) continue;
+                const indCell = row.querySelector('[data-col="indicator"]');
+                const lcCell = row.querySelector('[data-col="lastChecked"]');
+                try {
+                    indCell.innerHTML = badge('Processing');
+                    const r = await getIndicator(id, true);
+                    indCell.innerHTML = badge(r.status);
+                    lcCell.textContent = fmt(r.last_checked);
+                } catch { }
+            }
+        });
+        document.getElementById('stackTableBody').addEventListener('click', onTableClick);
+        loadStacks();
+    </script>
 </body>
+
 </html>

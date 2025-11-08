@@ -1,0 +1,94 @@
+{
+    // VS Code Tasks for running the FastAPI app with uv
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "Run app (uv --env-file)",
+            "type": "shell",
+            "command": "uv",
+            "args": [
+                "run",
+                "--env-file",
+                ".env",
+                "uvicorn",
+                "app.main:app",
+                "--host",
+                "127.0.0.1",
+                "--port",
+                "8080"
+            ],
+            "group": "none",
+            "problemMatcher": [],
+            "isBackground": true,
+            "presentation": {
+                "reveal": "always",
+                "panel": "dedicated",
+                "clear": false
+            }
+        },
+        {
+            "label": "Dev server (uv --env-file --reload)",
+            "type": "shell",
+            "command": "uv",
+            "args": [
+                "run",
+                "--env-file",
+                ".env",
+                "uvicorn",
+                "app.main:app",
+                "--reload",
+                "--host",
+                "127.0.0.1",
+                "--port",
+                "8080"
+            ],
+            "group": "none",
+            "problemMatcher": [],
+            "isBackground": true,
+            "presentation": {
+                "reveal": "always",
+                "panel": "dedicated",
+                "clear": false
+            }
+        },
+        {
+            "label": "Dev server (uv --reload)",
+            "type": "shell",
+            "command": "uv",
+            "args": [
+                "run",
+                "uvicorn",
+                "app.main:app",
+                "--reload",
+                "--host",
+                "127.0.0.1",
+                "--port",
+                "8080"
+            ],
+            "group": "none",
+            "problemMatcher": [],
+            "isBackground": true,
+            "presentation": {
+                "reveal": "always",
+                "panel": "dedicated",
+                "clear": false
+            }
+        },
+        {
+            "label": "uv sync (.venv)",
+            "type": "shell",
+            "command": "uv",
+            "args": [
+                "sync"
+            ],
+            "group": "build",
+            "problemMatcher": [
+                "$eslint-stylish"
+            ],
+            "presentation": {
+                "reveal": "always",
+                "panel": "shared"
+            }
+        }
+    ]
+}

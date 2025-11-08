@@ -1,11 +1,26 @@
 [project]
 name = "stack-updater-app"
 version = "0.0.1"
-description = "Add your description here"
+description = "Portainer stack updater and status dashboard"
 readme = "README.md"
 requires-python = ">=3.11"
-dependencies = ["fastapi", "uvicorn", "jinja2", "requests", "python-multipart"]
+dependencies = [
+    "requests",
+    "fastapi",
+    "uvicorn[standard]",
+    "httpx",
+    "python-dotenv",
+    "sqlalchemy",
+    "alembic",
+    "pydantic",
+    "jinja2",
+]
 
+[tool.uv]
+
+[build-system]
+requires = ["setuptools", "wheel"]
+build-backend = "setuptools.build_meta"
 
 [tool.ruff]
 # Enable the pycodestyle (`E`) and Pyflakes (`F`) rules by default.
