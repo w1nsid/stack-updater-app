@@ -151,3 +151,93 @@ Contributions are welcome! Feel free to open issues or submit pull
 requests if you spot bugs or have improvements to suggest. When adding
 features please ensure they remain lightweight to preserve the simple
 deployment workflow.
+
+The dashboard UI was upgraded for a cleaner, more modern feel:
+
+- Automatic dark/light theme based on system, with manual toggle (moon / sun icon in header)
+- Lucide SVG icon set for buttons and status badges
+- Animated processing badge (pulse + spinner)
+- Refreshed table styling, cards, soft borders, improved spacing scale
+- CSS variables for easy theming in `app/static/style.css`
+
+### Status Badge Legend
+| Status | Visual |
+|--------|--------|
+| Updated | Green badge with check icon |
+| Outdated | Yellow badge with warning triangle |
+| Error | Red badge with X icon |
+| Processing | Blue badge with spinning loader + pulse aura |
+| Unknown / Skipped | Gray badge with help icon |
+
+### Customizing Theme
+Edit color and spacing tokens at the top of `style.css` (`:root` section). To force light theme, add `data-theme="light"` to `<html>` or use the toggle. Remove or adjust radial gradients for a flatter design if preferred.
+
+### Script Responsibilities
+`app/static/script.js` handles:
+
+- Theme initialization and persistence (localStorage key `stackUpdaterTheme`)
+- Switching icon (moon/sun) to reflect current theme
+- Respecting system changes if user hasn't explicitly chosen a theme
+
+## Realtime Updates (WebSocket)
+
+The app pushes stack changes over a WebSocket at `/ws`.
+
+Events:
+
+- `{"type":"stack","payload":{...}}` – single stack changed (import, indicator refresh, update, check-now)
+- `{"type":"staleness","payload":[{"id":...,"is_outdated":...}]}` – periodic staleness evaluation from background task
+
+The client updates rows live and announces changes via a polite ARIA live region.
+
+## Sorting & Filtering
+
+- Click or press Enter/Space on a table header to sort (toggles asc/desc)
+- Search box for case-insensitive name filtering
+- Status dropdown filters by normalized status class (ok, warn, error, processing, unknown)
+
+## Accessibility Improvements
+
+- Focus-visible outline for interactive elements
+- Buttons have `aria-label` where textual context might be ambiguous
+- Live region announces render counts and update events
+- Table rows focusable via `tabindex="0"`
+- `.sr-only` utility available for off-screen text
+
+## Future Ideas
+
+1. Backoff/reconnect strategy for websocket
+2. Persist sort/filter state in URL query or localStorage
+3. Toast notifications and actionable errors
+4. SSE fallback if WS unavailable
+5. User-defined custom status thresholds
+
+Feel free to open an issue if you’d like any of these implemented next.
+\n+The dashboard UI was upgraded for a cleaner, more modern feel:
+\n+- Automatic dark/light theme based on system, with manual toggle (moon / sun icon in header)
+- Lucide SVG icon set for buttons and status badges
+- Animated processing badge (pulse + spinner)
+- Refreshed table styling, cards, soft borders, improved spacing scale
+- CSS variables for easy theming in `app/static/style.css`
+\n+### Status Badge Legend
+| Status | Visual |
+|--------|--------|
+| Updated | Green badge with check icon |
+| Outdated | Yellow badge with warning triangle |
+| Error | Red badge with X icon |
+| Processing | Blue badge with spinning loader + pulse aura |
+| Unknown / Skipped | Gray badge with help icon |
+\n+### Customizing Theme
+Edit color and spacing tokens at the top of `style.css` (`:root` section). To force light theme, add `data-theme="light"` to `<html>` or use the toggle. Remove or adjust radial gradients for a flatter design if preferred.
+\n+### Script Responsibilities
+`app/static/script.js` handles:
+\n+- Theme initialization and persistence (localStorage key `stackUpdaterTheme`)
+- Switching icon (moon/sun) to reflect current theme
+- Respecting system changes if user hasn't explicitly chosen a theme
+\n+### Future Enhancements (Ideas)
+1. Live status updates via Server-Sent Events or WebSocket
+2. Accessibility pass (focus rings, ARIA labels on dynamic elements)
+3. User-selectable accent color (store in localStorage)
+4. Column sorting & filtering
+5. Toast notifications for success/error actions
+\n+Feel free to propose any of these in an issue if you need them next.

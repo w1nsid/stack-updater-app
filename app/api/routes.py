@@ -10,6 +10,7 @@ from sqlalchemy.orm import Session
 from ..config import settings
 from ..db import Base, engine, get_db
 from ..models.stack import Stack
+from ..realtime import broadcast_stack_update
 from ..services.portainer_client import PortainerClient
 
 router = APIRouter(prefix="/api", tags=["stacks"])
@@ -145,6 +146,13 @@ async def import_stacks(db: Session = Depends(get_db)) -> dict:
             imported += 1
 
     db.commit()
+    # Broadcast each imported/updated stack row state (best effort)
+    try:
+        rows = db.query(Stack).order_by(Stack.id.asc()).all()
+        for s in rows:
+            await broadcast_stack_update(s)
+    except Exception:  # pragma: no cover
+        pass
     log.info("Import completed: %d new stacks", imported)
     return {"imported": imported}
 
@@ -196,16 +204,24 @@ async def trigger_update(stack_id: int, db: Session = Depends(get_db)) -> dict:
     except Exception:
         pass
     db.commit()
+    try:
+        await broadcast_stack_update(row)
+    except Exception:  # pragma: no cover
+        pass
     return {"updated": True}
 
 
 @router.post("/stacks/{stack_id}/auto-update")
-def set_auto_update(stack_id: int, enabled: bool, db: Session = Depends(get_db)) -> dict:
+async def set_auto_update(stack_id: int, enabled: bool, db: Session = Depends(get_db)) -> dict:
     row = db.get(Stack, stack_id)
     if not row:
         raise HTTPException(status_code=404, detail="Stack not found")
     row.auto_update_enabled = enabled
     db.commit()
+    try:
+        await broadcast_stack_update(row)
+    except Exception:  # pragma: no cover
+        pass
     return {"id": row.id, "auto_update_enabled": row.auto_update_enabled}
 
 
@@ -225,6 +241,11 @@ async def run_auto_update(db: Session = Depends(get_db)) -> dict:
             row.is_outdated = False
             updated += 1
     db.commit()
+    try:
+        for r in rows:
+            await broadcast_stack_update(r)
+    except Exception:  # pragma: no cover
+        pass
     log.info("Auto-update completed: %d stacks updated", updated)
     return {"updated": updated}
 
@@ -245,5 +266,9 @@ async def check_now(stack_id: int, db: Session = Depends(get_db)) -> dict:
         is_outdated = now - row.last_updated_at > threshold
     row.is_outdated = is_outdated
     db.commit()
+    try:
+        await broadcast_stack_update(row)
+    except Exception:  # pragma: no cover
+        pass
     log.info("Check-now completed for stack %s: outdated=%s", stack_id, is_outdated)
     return {"id": row.id, "is_outdated": row.is_outdated}

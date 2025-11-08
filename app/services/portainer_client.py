@@ -54,10 +54,14 @@ class PortainerClient:
         # Allow explicit args to override environment settings
         cf_id = cloudflare_client_id or settings.cf_access_client_id
         cf_secret = cloudflare_client_secret or settings.cf_access_client_secret
+        # Keep CF headers separate so we can avoid sending API key to webhooks
+        self._cf_headers: dict[str, str] = {}
         if cf_id and cf_secret:
             # Cloudflare access headers
             self._headers["CF-Access-Client-ID"] = cf_id
             self._headers["CF-Access-Client-Secret"] = cf_secret
+            self._cf_headers["CF-Access-Client-ID"] = cf_id
+            self._cf_headers["CF-Access-Client-Secret"] = cf_secret
 
     # -------- Raw endpoints --------
     async def list_stacks(self) -> List[Dict[str, Any]]:
@@ -110,8 +114,8 @@ class PortainerClient:
 
     def build_webhook_url(self, token: str) -> str:
         base = self.base_url
-        url = f"{base}/api/webhooks/{token}"
-        return url
+        # Original path format retained
+        return f"{base}/api/stacks/webhooks/{token}"
 
     def extract_webhook_url(self, stack_obj: Dict[str, Any]) -> Optional[str]:
         """Return a full webhook URL built strictly from the token.
@@ -177,11 +181,12 @@ class PortainerClient:
         return [s for s in infos if s.has_webhook]
 
     async def trigger_webhook(self, webhook_url: str) -> bool:
-        # Portainer webhooks are usually simple POST endpoints
+        # Portainer webhooks should NOT include API key headers; include CF headers if configured.
         self._log.info("POST %s", webhook_url)
-        async with httpx.AsyncClient(verify=self.verify_ssl, timeout=30.0) as client:
+        async with httpx.AsyncClient(verify=self.verify_ssl, timeout=30.0, follow_redirects=True) as client:
             try:
-                r = await client.post(webhook_url)
+                headers = self._cf_headers or None
+                r = await client.post(webhook_url, headers=headers)
                 self._log.debug("Response %s %s", r.status_code, r.text[:500])
                 ok = r.status_code // 100 == 2
                 if not ok:

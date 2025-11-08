@@ -9,6 +9,7 @@ from sqlalchemy.orm import Session
 from ..config import settings
 from ..db import SessionLocal
 from ..models.stack import Stack
+from ..realtime import broadcast_staleness_payload
 
 
 async def status_refresher():
@@ -36,3 +37,9 @@ def _refresh_statuses(db: Session) -> None:
             is_outdated = now - row.last_updated_at > threshold
         row.is_outdated = is_outdated
     db.commit()
+    # Snapshot payload BEFORE session/context ends to avoid detached access.
+    payload = [{"id": r.id, "is_outdated": r.is_outdated} for r in rows]
+    try:
+        asyncio.create_task(broadcast_staleness_payload(payload))
+    except Exception:
+        pass

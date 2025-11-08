@@ -3,33 +3,14 @@
 
 <head>
     <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Stack Updater Dashboard</title>
-    <link rel="stylesheet" href="/static/style.css" />
-</head>
-
-<body>
-    <div class="container">
-        <h1>Stack Updater Dashboard</h1>
-        <div class="actions">
-            <button id="importBtn">Import from Portainer</button>
-            <button id="refreshAllBtn">Refresh All Status</button>
-        </div>
-        <table>
-            <thead>
-                <tr>
-                    <th>Name</th>
-                    <th>Type</th>
-                    <th>Image Status</th>
-                    <th>Last Checked</th>
-                    <th>Last Updated</th>
-                    <th>Actions</th>
-                </tr>
-            </thead>
-            <tbody id="stackTableBody">
-            </tbody>
-        </table>
-    </div>
+    <link rel="stylesheet" href="/static/style.css?v=2.0" />
+    <!-- Icons (Lucide) -->
+    <script src="https://unpkg.com/lucide@latest" defer></script>
+    <script src="/static/script.js?v=2.0" defer></script>
     <script>
+        // Inline config for badges uses the same status mapping as backend
         const statusClass = (s) => {
             if (!s) return 'unknown';
             const map = {
@@ -43,10 +24,21 @@
             return map[s] || 'unknown';
         };
 
+        const statusIcon = (cls) => ({
+            ok: 'check-circle',
+            warn: 'alert-triangle',
+            error: 'x-circle',
+            processing: 'loader-circle',
+            unknown: 'help-circle'
+        })[cls] || 'help-circle';
+
         function badge(status) {
             const cls = statusClass(status);
-            const spinner = (cls === 'processing') ? '<span class="spinner" aria-hidden="true"></span>' : '';
-            return `<span class="badge ${cls}">${spinner}${status || 'n/a'}</span>`;
+            const icon = statusIcon(cls);
+            const spin = (cls === 'processing') ? 'spin' : '';
+            return `<span class="badge-icon ${cls}" title="${status || 'Unknown'}" role="status" aria-label="${status || 'unknown'} status">
+                <i data-lucide="${icon}" class="icon ${spin}" aria-hidden="true"></i>
+            </span>`;
         }
 
         function fmt(dt) {
@@ -59,36 +51,57 @@
             const data = await res.json();
             const tbody = document.getElementById('stackTableBody');
             tbody.innerHTML = '';
+
+            // Update stats
+            updateStats(data);
+
             for (const s of data) {
                 const tr = document.createElement('tr');
                 tr.innerHTML = `
-                    <td>${s.name}</td>
+                    <td class="name"><i data-lucide="layers" class="muted"></i><span>${s.name}</span></td>
                     <td>${s.type ?? ''}</td>
                     <td data-col="indicator">${badge(s.image_status)}</td>
                     <td data-col="lastChecked">${fmt(s.image_last_checked)}</td>
                     <td>${fmt(s.last_updated_at)}</td>
                     <td class="action-buttons">
-                        <button data-action="get" data-id="${s.id}">Get Status</button>
-                        <button data-action="refresh" data-id="${s.id}">Quick Refresh</button>
-                        <button data-action="update" data-id="${s.id}">Update</button>
+                        <button data-action="get" data-id="${s.id}" class="ghost"><i data-lucide="scan"></i><span>Get Status</span></button>
+                        <button data-action="refresh" data-id="${s.id}" class="ghost"><i data-lucide="rotate-cw"></i><span>Quick Refresh</span></button>
+                        <button data-action="update" data-id="${s.id}" class="primary"><i data-lucide="download-cloud"></i><span>Update</span></button>
                     </td>`;
                 tbody.appendChild(tr);
             }
+            // hydrate icons
+            if (window.lucide?.createIcons) lucide.createIcons();
+        }
+
+        function updateStats(data) {
+            const total = data.length;
+            const updated = data.filter(s => statusClass(s.image_status) === 'ok').length;
+            const outdated = data.filter(s => statusClass(s.image_status) === 'warn').length;
+            const errors = data.filter(s => statusClass(s.image_status) === 'error').length;
+
+            document.getElementById('statTotal').textContent = total;
+            document.getElementById('statUpdated').textContent = updated;
+            document.getElementById('statOutdated').textContent = outdated;
+            document.getElementById('statErrors').textContent = errors;
         }
 
         async function importStacks() {
             const btn = document.getElementById('importBtn');
-            btn.disabled = true; btn.textContent = 'Importing...';
+            const original = btn.innerHTML;
+            btn.disabled = true; btn.innerHTML = '<i data-lucide="download"></i><span>Importing...</span>';
+            if (window.lucide?.createIcons) lucide.createIcons();
             try {
                 await fetch('/api/stacks/import');
             } finally {
-                btn.disabled = false; btn.textContent = 'Import from Portainer';
+                btn.disabled = false; btn.innerHTML = original;
+                if (window.lucide?.createIcons) lucide.createIcons();
             }
             await loadStacks();
         }
 
         async function getIndicator(id, refresh) {
-            const res = await fetch(`/api/stacks/${id}/indicator?refresh=${refresh ? 'true' : 'false'}`);
+            const res = await fetch(`/api/stacks/${id}/indicator?refresh=${refresh ? '1' : '0'}`);
             if (!res.ok) throw new Error('indicator failed');
             return res.json();
         }
@@ -108,47 +121,152 @@
             const indCell = row.querySelector('[data-col="indicator"]');
             const lcCell = row.querySelector('[data-col="lastChecked"]');
             try {
+                indCell.innerHTML = badge('Processing');
+                if (window.lucide?.createIcons) lucide.createIcons();
                 if (action === 'get') {
-                    indCell.innerHTML = badge('Processing');
                     const r = await getIndicator(id, false);
                     indCell.innerHTML = badge(r.status);
                     lcCell.textContent = fmt(r.last_checked);
                 } else if (action === 'refresh') {
-                    indCell.innerHTML = badge('Processing');
                     const r = await getIndicator(id, true);
                     indCell.innerHTML = badge(r.status);
                     lcCell.textContent = fmt(r.last_checked);
                 } else if (action === 'update') {
-                    indCell.innerHTML = badge('Processing');
                     await updateStack(id);
                     const r = await getIndicator(id, false);
                     indCell.innerHTML = badge(r.status);
                     lcCell.textContent = fmt(r.last_checked);
                 }
+                if (window.lucide?.createIcons) lucide.createIcons();
+                // Reload to update stats
+                await loadStacks();
             } catch (err) {
                 indCell.innerHTML = badge('Error');
+                if (window.lucide?.createIcons) lucide.createIcons();
             }
         }
 
-        document.getElementById('importBtn').addEventListener('click', importStacks);
-        document.getElementById('refreshAllBtn').addEventListener('click', async () => {
-            const rows = Array.from(document.querySelectorAll('#stackTableBody tr'));
-            for (const row of rows) {
-                const id = row.querySelector('button[data-action]')?.getAttribute('data-id');
-                if (!id) continue;
-                const indCell = row.querySelector('[data-col="indicator"]');
-                const lcCell = row.querySelector('[data-col="lastChecked"]');
-                try {
-                    indCell.innerHTML = badge('Processing');
-                    const r = await getIndicator(id, true);
-                    indCell.innerHTML = badge(r.status);
-                    lcCell.textContent = fmt(r.last_checked);
-                } catch { }
-            }
+        document.addEventListener('DOMContentLoaded', () => {
+            // Theme init handled by /static/script.js
+            document.getElementById('importBtn').addEventListener('click', importStacks);
+            document.getElementById('refreshAllBtn').addEventListener('click', async () => {
+                const rows = Array.from(document.querySelectorAll('#stackTableBody tr'));
+                for (const row of rows) {
+                    const id = row.querySelector('button[data-action]')?.getAttribute('data-id');
+                    if (!id) continue;
+                    const indCell = row.querySelector('[data-col="indicator"]');
+                    const lcCell = row.querySelector('[data-col="lastChecked"]');
+                    try {
+                        indCell.innerHTML = badge('Processing');
+                        if (window.lucide?.createIcons) lucide.createIcons();
+                        const r = await getIndicator(id, true);
+                        indCell.innerHTML = badge(r.status);
+                        lcCell.textContent = fmt(r.last_checked);
+                        if (window.lucide?.createIcons) lucide.createIcons();
+                    } catch { }
+                }
+                await loadStacks();
+            });
+            document.getElementById('stackTableBody').addEventListener('click', onTableClick);
+            loadStacks();
         });
-        document.getElementById('stackTableBody').addEventListener('click', onTableClick);
-        loadStacks();
     </script>
+</head>
+
+<body>
+    <header class="app-header">
+        <div class="brand">
+            <i data-lucide="boxes"></i>
+            <span>Stack Updater</span>
+        </div>
+        <div class="header-actions">
+            <button id="importBtn" class="ghost"><i data-lucide="download"></i><span>Import</span></button>
+            <button id="refreshAllBtn" class="ghost"><i data-lucide="rotate-cw"></i><span>Refresh All</span></button>
+            <button id="themeToggle" class="icon-btn" title="Toggle theme" aria-label="Toggle theme">
+                <i data-lucide="moon"></i>
+            </button>
+        </div>
+    </header>
+
+    <div class="container">
+        <!-- Stats Cards -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-icon ok">
+                    <i data-lucide="check-circle"></i>
+                </div>
+                <div class="stat-content">
+                    <div class="stat-value" id="statUpdated">0</div>
+                    <div class="stat-label">Updated</div>
+                </div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-icon warn">
+                    <i data-lucide="alert-triangle"></i>
+                </div>
+                <div class="stat-content">
+                    <div class="stat-value" id="statOutdated">0</div>
+                    <div class="stat-label">Outdated</div>
+                </div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-icon error">
+                    <i data-lucide="x-circle"></i>
+                </div>
+                <div class="stat-content">
+                    <div class="stat-value" id="statErrors">0</div>
+                    <div class="stat-label">Errors</div>
+                </div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-icon primary">
+                    <i data-lucide="layers"></i>
+                </div>
+                <div class="stat-content">
+                    <div class="stat-value" id="statTotal">0</div>
+                    <div class="stat-label">Total Stacks</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Dashboard Card -->
+        <div class="card">
+            <h1>Dashboard</h1>
+            <div class="toolbar" style="display:flex;flex-wrap:wrap;gap:12px;margin-bottom:16px;align-items:center;">
+                <label class="sr-only" for="filterSearch">Search stacks</label>
+                <input id="filterSearch" type="text" placeholder="🔍 Search by name..." aria-label="Search stacks"
+                    style="flex:1;min-width:200px;" />
+                <label class="sr-only" for="filterStatus">Filter status</label>
+                <select id="filterStatus" aria-label="Filter by status">
+                    <option value="all">All statuses</option>
+                    <option value="ok">✅ Updated</option>
+                    <option value="warn">⚠️ Outdated</option>
+                    <option value="error">❌ Error</option>
+                    <option value="processing">⏳ Processing</option>
+                    <option value="unknown">❓ Unknown</option>
+                </select>
+            </div>
+            <div class="table-wrapper">
+                <table aria-describedby="aria-live-region">
+                    <thead>
+                        <tr>
+                            <th data-key="name" scope="col">Name</th>
+                            <th data-key="type" scope="col">Type</th>
+                            <th data-key="image_status" scope="col">Image Status</th>
+                            <th data-key="image_last_checked" scope="col">Last Checked</th>
+                            <th data-key="last_updated_at" scope="col">Last Updated</th>
+                            <th scope="col">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="stackTableBody">
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
 </body>
 
 </html>
