@@ -56,7 +56,6 @@ def stack_payload(row: Any) -> Dict[str, Any]:
     return {
         "id": row.id,
         "name": getattr(row, "name", None),
-        "type": getattr(row, "type", None),
         "image_status": getattr(row, "image_status", None),
         "image_message": getattr(row, "image_message", None),
         "image_last_checked": getattr(row, "image_last_checked", None),

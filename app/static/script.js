@@ -38,15 +38,17 @@
 
     const statusClass = (s) => {
         if (!s) return 'unknown';
+        // Normalize the status string: trim whitespace and convert to lowercase
+        const normalized = s.toString().trim().toLowerCase();
         const map = {
-            'Processing': 'processing',
-            'Preparing': 'processing',
-            'Updated': 'ok',
-            'Outdated': 'warn',
-            'Skipped': 'unknown',
-            'Error': 'error'
+            'processing': 'processing',
+            'preparing': 'processing',
+            'updated': 'ok',
+            'outdated': 'warn',
+            'skipped': 'unknown',
+            'error': 'error'
         };
-        return map[s] || 'unknown';
+        return map[normalized] || 'unknown';
     };
     const statusIcon = (cls) => ({
         ok: 'check-circle',
@@ -97,7 +99,6 @@
             tr.setAttribute('tabindex', '0');
             tr.innerHTML = `
                 <td class="name"><i data-lucide="layers" class="muted" aria-hidden="true"></i><span>${s.name}</span></td>
-                <td>${s.type ?? ''}</td>
                 <td data-col="indicator">${badge(s.image_status)}</td>
                 <td data-col="lastChecked">${fmt(s.image_last_checked)}</td>
                 <td>${fmt(s.last_updated_at)}</td>

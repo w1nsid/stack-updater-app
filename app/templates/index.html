@@ -13,15 +13,17 @@
         // Inline config for badges uses the same status mapping as backend
         const statusClass = (s) => {
             if (!s) return 'unknown';
+            // Normalize the status string: trim whitespace and convert to lowercase
+            const normalized = s.toString().trim().toLowerCase();
             const map = {
-                'Processing': 'processing',
-                'Preparing': 'processing',
-                'Updated': 'ok',
-                'Outdated': 'warn',
-                'Skipped': 'unknown',
-                'Error': 'error'
+                'processing': 'processing',
+                'preparing': 'processing',
+                'updated': 'ok',
+                'outdated': 'warn',
+                'skipped': 'unknown',
+                'error': 'error'
             };
-            return map[s] || 'unknown';
+            return map[normalized] || 'unknown';
         };
 
         const statusIcon = (cls) => ({
@@ -59,7 +61,6 @@
                 const tr = document.createElement('tr');
                 tr.innerHTML = `
                     <td class="name"><i data-lucide="layers" class="muted"></i><span>${s.name}</span></td>
-                    <td>${s.type ?? ''}</td>
                     <td data-col="indicator">${badge(s.image_status)}</td>
                     <td data-col="lastChecked">${fmt(s.image_last_checked)}</td>
                     <td>${fmt(s.last_updated_at)}</td>
@@ -254,7 +255,6 @@
                     <thead>
                         <tr>
                             <th data-key="name" scope="col">Name</th>
-                            <th data-key="type" scope="col">Type</th>
                             <th data-key="image_status" scope="col">Image Status</th>
                             <th data-key="image_last_checked" scope="col">Last Checked</th>
                             <th data-key="last_updated_at" scope="col">Last Updated</th>

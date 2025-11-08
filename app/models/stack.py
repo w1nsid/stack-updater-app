@@ -16,7 +16,6 @@ class Stack(Base):
     webhook_url: Mapped[str | None] = mapped_column(String(1024), nullable=True)
 
     # Optional Portainer metadata (not required for operation but useful to show)
-    type: Mapped[int | None] = mapped_column(Integer, nullable=True)
     portainer_created_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
     portainer_updated_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
 
