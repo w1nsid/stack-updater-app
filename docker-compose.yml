@@ -1,0 +1,22 @@
+version: '3.8'
+
+services:
+  stack-updater:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: stack-updater
+    ports:
+      - "8080:8080"
+    env_file:
+      - .env
+    volumes:
+      # Persist SQLite database
+      - ./data:/app/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:8080/api/stacks"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s

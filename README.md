@@ -52,28 +52,78 @@ We use uv with `pyproject.toml` and a checked-in `uv.lock` for fast, reproducibl
 The database file `database.db` will be created automatically in the `app/`
 directory on first run.
 
-## Using Docker (uv base image)
+## Using Docker Compose (Recommended)
 
-To build and run the application as a Docker container:
+The easiest way to run the application is with Docker Compose:
+
+1. **Copy the example environment file:**
+
+   ```bash
+   cp .env.example .env
+   ```
+
+2. **Edit `.env` with your settings:**
+
+   ```bash
+   # Required
+   PORTAINER_URL=https://your-portainer.example.com
+   PORTAINER_API_KEY=ptr_your_api_key_here
+   
+   # Optional - adjust as needed
+   REFRESH_INTERVAL=30
+   OUTDATED_AFTER_SECONDS=86400
+   VERIFY_SSL=true
+   ```
+
+3. **Start the application:**
+
+   ```bash
+   docker-compose up -d
+   ```
+
+4. **Access the dashboard:**
+
+   Open `http://localhost:8080` in your browser.
+
+5. **View logs:**
+
+   ```bash
+   docker-compose logs -f stack-updater
+   ```
+
+6. **Stop the application:**
+
+   ```bash
+   docker-compose down
+   ```
+
+The application will:
+- Build the Docker image from the Dockerfile
+- Load environment variables from `.env`
+- Persist the SQLite database in `./data/` directory
+- Automatically restart if it crashes
+- Include health checks to monitor status
+
+## Using Docker (Manual)
+
+To build and run the application as a Docker container manually:
 
 ```bash
 docker build -t stack-updater .
-docker run -d -p 8080:8080 --name stack-updater stack-updater
-```
-
-Then visit `http://localhost:8080` in your browser. To persist the SQLite
-database outside the container you can mount a volume:
-
-```bash
 docker run -d -p 8080:8080 \
-  -v $(pwd)/data:/app/app \
-  --name stack-updater stack-updater
+  --env-file .env \
+  -v $(pwd)/data:/app/data \
+  --name stack-updater \
+  stack-updater
 ```
+
+Then visit `http://localhost:8080` in your browser.
 
 Notes:
 - The Dockerfile uses `ghcr.io/astral-sh/uv:python3.11-alpine` as base image.
 - Dependencies are resolved from `pyproject.toml` with `uv.lock` and installed via `uv sync --frozen`.
 - Container listens on 0.0.0.0:8080 internally; host binding is managed by `-p 8080:8080`.
+- Database is persisted in the `./data` volume mount.
 
 ## Portainer Stack Import
 
