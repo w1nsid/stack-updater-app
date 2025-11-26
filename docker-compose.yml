@@ -21,7 +21,10 @@ services:
       # Application
       - REFRESH_INTERVAL=${REFRESH_INTERVAL:-30}
       - OUTDATED_AFTER_SECONDS=${OUTDATED_AFTER_SECONDS:-86400}
+      # Logging
       - LOG_LEVEL=${LOG_LEVEL:-INFO}
+      - LOG_MAX_BYTES=${LOG_MAX_BYTES:-1048576}
+      - LOG_BACKUP_COUNT=${LOG_BACKUP_COUNT:-3}
       # Security
       - ALLOWED_HOSTS=${ALLOWED_HOSTS:-*}
       - DISABLE_DOCS=${DISABLE_DOCS:-false}
