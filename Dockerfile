@@ -15,16 +15,16 @@ FROM ghcr.io/astral-sh/uv:python3.11-alpine
 
 # Security: run as non-root user
 RUN addgroup -g 1000 appgroup && \
-    adduser -u 1000 -G appgroup -h /app -D appuser
+    adduser -u 1000 -G appgroup -h /home/appuser -D appuser && \
+    mkdir -p /app
 
 WORKDIR /app
 
 # Copy from builder
 COPY --from=builder --chown=appuser:appgroup /app /app
 
-# Create data directory for SQLite and uv cache directory
-RUN mkdir -p /app/data /app/.cache/uv && \
-    chown -R appuser:appgroup /app/data /app/.cache
+# Create data directory for SQLite
+RUN mkdir -p /app/data && chown appuser:appgroup /app/data
 
 # Switch to non-root user
 USER appuser
@@ -34,7 +34,7 @@ ENV PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1 \
     DATABASE_URL=sqlite:////app/data/app.db \
     LOG_FILE=/app/data/app.log \
-    UV_CACHE_DIR=/app/.cache/uv
+    UV_NO_CACHE=1
 
 EXPOSE 8080
 
