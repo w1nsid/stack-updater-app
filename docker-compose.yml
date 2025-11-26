@@ -8,8 +8,23 @@ services:
       - path: .env
         required: false
     environment:
+      # App settings (override from .env via env_file above)
       - DATABASE_URL=sqlite:////app/data/app.db
       - LOG_FILE=/app/data/app.log
+      # Portainer
+      - PORTAINER_URL=${PORTAINER_URL:-http://localhost:9000}
+      - PORTAINER_API_KEY=${PORTAINER_API_KEY:-}
+      - VERIFY_SSL=${VERIFY_SSL:-true}
+      # Cloudflare Access
+      - CF_ACCESS_CLIENT_ID=${CF_ACCESS_CLIENT_ID:-}
+      - CF_ACCESS_CLIENT_SECRET=${CF_ACCESS_CLIENT_SECRET:-}
+      # Application
+      - REFRESH_INTERVAL=${REFRESH_INTERVAL:-30}
+      - OUTDATED_AFTER_SECONDS=${OUTDATED_AFTER_SECONDS:-86400}
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
+      # Security
+      - ALLOWED_HOSTS=${ALLOWED_HOSTS:-*}
+      - DISABLE_DOCS=${DISABLE_DOCS:-false}
     volumes:
       # Persist SQLite database and logs
       - ${DATA_PATH:-stack_updater_data}:/app/data
