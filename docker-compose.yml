@@ -1,20 +1,48 @@
 services:
   stack-updater:
+    image: ${IMAGE:-ghcr.io/w1nsid/stack-updater-app:latest}
     build:
       context: .
       dockerfile: Dockerfile
     container_name: stack-updater
     ports:
-      - "8080:8080"
+      - "${HOST_PORT:-8080}:8080"
     env_file:
       - .env
+    environment:
+      - DATABASE_URL=sqlite:////app/data/app.db
+      - LOG_FILE=/app/data/app.log
     volumes:
-      # Persist SQLite database
-      - ./data:/app/data
+      # Persist SQLite database and logs
+      - ${DATA_PATH:-stack_updater_data}:/app/data
     restart: unless-stopped
+    # Security: read-only root filesystem where possible
+    read_only: true
+    tmpfs:
+      - /tmp:noexec,nosuid,size=64m
+    # Resource limits
+    deploy:
+      resources:
+        limits:
+          cpus: '1'
+          memory: 256M
+        reservations:
+          cpus: '0.25'
+          memory: 64M
+    # Security options
+    security_opt:
+      - no-new-privileges:true
     healthcheck:
       test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:8080/api/stacks"]
       interval: 30s
       timeout: 10s
       retries: 3
       start_period: 10s
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+volumes:
+  stack_updater_data:
