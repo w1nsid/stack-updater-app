@@ -126,8 +126,15 @@ jobs:
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     steps:
       - name: Trigger Portainer stack update
+        env:
+          WEBHOOK_URL: ${{ secrets.STACK_WEBHOOK_URL }}
+          CF_CLIENT_ID: ${{ secrets.CF_ACCESS_CLIENT_ID }}
+          CF_CLIENT_SECRET: ${{ secrets.CF_ACCESS_CLIENT_SECRET }}
         run: |
-          curl -X POST "${{ secrets.STACK_WEBHOOK_URL }}" \
-            -H "cf-access-client-id: ${{ secrets.CF_ACCESS_CLIENT_ID }}" \
-            -H "cf-access-client-secret: ${{ secrets.CF_ACCESS_CLIENT_SECRET }}" \
-            --fail --silent --show-error
+          echo "Client ID length: ${#CF_CLIENT_ID}"
+          echo "Client Secret length: ${#CF_CLIENT_SECRET}"
+          echo "URL length: ${#WEBHOOK_URL}"
+          curl -X POST "$WEBHOOK_URL" \
+            -H "cf-access-client-id: $CF_CLIENT_ID" \
+            -H "cf-access-client-secret: $CF_CLIENT_SECRET" \
+            -v --fail
