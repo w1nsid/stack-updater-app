@@ -18,6 +18,7 @@ services:
     read_only: true
     tmpfs:
       - /tmp:noexec,nosuid,size=64m
+      - /app/.cache:noexec,nosuid,size=64m
     # Resource limits
     deploy:
       resources:
