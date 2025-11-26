@@ -122,6 +122,7 @@ jobs:
 
   deploy:
     runs-on: ubuntu-latest
+    needs: [docker]
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     steps:
       - name: Trigger Portainer stack update
@@ -130,7 +131,7 @@ jobs:
           CF_CLIENT_ID: ${{ secrets.CF_ACCESS_CLIENT_ID }}
           CF_CLIENT_SECRET: ${{ secrets.CF_ACCESS_CLIENT_SECRET }}
         run: |
-          curl -v -X POST "${WEBHOOK_URL}" \
+          curl -X POST "${WEBHOOK_URL}" \
             -H "cf-access-client-id: ${CF_CLIENT_ID}" \
             -H "cf-access-client-secret: ${CF_CLIENT_SECRET}" \
-            --fail
+            --fail --silent --show-error
