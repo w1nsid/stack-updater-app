@@ -786,7 +786,7 @@ wheels = [
 [[package]]
 name = "stack-updater-app"
 version = "0.0.1"
-source = { editable = "." }
+source = { virtual = "." }
 dependencies = [
     { name = "alembic" },
     { name = "fastapi" },

@@ -3,9 +3,10 @@ FROM ghcr.io/astral-sh/uv:python3.11-alpine AS builder
 
 WORKDIR /app
 
-COPY pyproject.toml uv.lock README.md ./
+COPY pyproject.toml uv.lock ./
 
-RUN uv sync --frozen --no-dev --compile-bytecode
+# Just install dependencies, don't try to build the project as a package
+RUN uv sync --frozen --no-dev --no-install-project
 
 COPY app/ ./app/
 COPY main.py ./
