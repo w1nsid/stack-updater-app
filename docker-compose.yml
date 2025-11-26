@@ -8,7 +8,8 @@ services:
     ports:
       - "${HOST_PORT:-8080}:8080"
     env_file:
-      - .env
+      - path: .env
+        required: false
     environment:
       - DATABASE_URL=sqlite:////app/data/app.db
       - LOG_FILE=/app/data/app.log
