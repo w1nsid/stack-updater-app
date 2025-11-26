@@ -22,8 +22,9 @@ WORKDIR /app
 # Copy from builder
 COPY --from=builder --chown=appuser:appgroup /app /app
 
-# Create data directory for SQLite
-RUN mkdir -p /app/data && chown appuser:appgroup /app/data
+# Create data directory for SQLite and uv cache directory
+RUN mkdir -p /app/data /app/.cache/uv && \
+    chown -R appuser:appgroup /app/data /app/.cache
 
 # Switch to non-root user
 USER appuser
@@ -32,7 +33,8 @@ USER appuser
 ENV PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1 \
     DATABASE_URL=sqlite:////app/data/app.db \
-    LOG_FILE=/app/data/app.log
+    LOG_FILE=/app/data/app.log \
+    UV_CACHE_DIR=/app/.cache/uv
 
 EXPOSE 8080
 
