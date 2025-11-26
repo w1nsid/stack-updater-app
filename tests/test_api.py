@@ -14,6 +14,7 @@ from app.models.stack import Stack
 
 class TestListStacks:
     """Tests for GET /api/stacks endpoint."""
+
     def test_list_stacks_empty(self, client: TestClient) -> None:
         """Test listing stacks when database is empty."""
         response = client.get("/api/stacks")
@@ -80,6 +81,7 @@ class TestListStacks:
 
 class TestImportStacks:
     """Tests for GET /api/stacks/import endpoint."""
+
     @patch("app.api.routes.PortainerClient")
     def test_import_stacks_success(
         self,
@@ -150,6 +152,7 @@ class TestImportStacks:
 
 class TestGetIndicator:
     """Tests for GET /api/stacks/{stack_id}/indicator endpoint."""
+
     def test_get_indicator_not_found(self, client: TestClient) -> None:
         """Test indicator for non-existent stack."""
         response = client.get("/api/stacks/999/indicator")
@@ -204,6 +207,7 @@ class TestGetIndicator:
 
 class TestTriggerUpdate:
     """Tests for POST /api/stacks/{stack_id}/update endpoint."""
+
     def test_update_not_found(self, client: TestClient) -> None:
         """Test update for non-existent stack."""
         response = client.post("/api/stacks/999/update")
@@ -262,6 +266,7 @@ class TestTriggerUpdate:
 
 class TestSetAutoUpdate:
     """Tests for POST /api/stacks/{stack_id}/auto-update endpoint."""
+
     def test_auto_update_not_found(self, client: TestClient) -> None:
         """Test auto-update for non-existent stack."""
         response = client.post("/api/stacks/999/auto-update?enabled=true")
@@ -295,6 +300,7 @@ class TestSetAutoUpdate:
 
 class TestCheckNow:
     """Tests for POST /api/stacks/{stack_id}/check-now endpoint."""
+
     def test_check_now_not_found(self, client: TestClient) -> None:
         """Test check-now for non-existent stack."""
         response = client.post("/api/stacks/999/check-now")
@@ -342,6 +348,7 @@ class TestCheckNow:
 
 class TestIndexPage:
     """Tests for the index page."""
+
     def test_index_returns_html(self, client: TestClient) -> None:
         """Test that index returns HTML page."""
         response = client.get("/")

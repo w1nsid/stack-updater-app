@@ -11,6 +11,7 @@ from app.models.stack import Stack
 
 class TestStackModel:
     """Tests for the Stack model."""
+
     def test_create_stack(self, db: Session) -> None:
         """Test creating a new stack."""
         stack = Stack(
@@ -117,10 +118,14 @@ class TestStackModel:
         db.commit()
 
         # Query for stacks that need auto-update
-        needs_update = db.query(Stack).filter(
-            Stack.auto_update_enabled == True,  # noqa: E712
-            Stack.is_outdated == True,  # noqa: E712
-        ).all()
+        needs_update = (
+            db.query(Stack)
+            .filter(
+                Stack.auto_update_enabled == True,  # noqa: E712
+                Stack.is_outdated == True,  # noqa: E712
+            )
+            .all()
+        )
 
         assert len(needs_update) == 1
         assert needs_update[0].name == "auto-enabled"

@@ -9,7 +9,11 @@ from fastapi import WebSocket
 from fastapi.websockets import WebSocketDisconnect
 
 __all__ = [
-    "manager", "ConnectionManager", "broadcast_stack_update", "broadcast_staleness", "broadcast_staleness_payload"
+    "manager",
+    "ConnectionManager",
+    "broadcast_stack_update",
+    "broadcast_staleness",
+    "broadcast_staleness_payload",
 ]
 
 log = logging.getLogger(__name__)
@@ -76,10 +80,7 @@ async def broadcast_staleness(rows: Iterable[Any]) -> None:
     await manager.broadcast_json(
         {
             "type": "staleness",
-            "payload": [{
-                "id": r.id,
-                "is_outdated": getattr(r, "is_outdated", None)
-            } for r in rows],
+            "payload": [{"id": r.id, "is_outdated": getattr(r, "is_outdated", None)} for r in rows],
         }
     )
 
