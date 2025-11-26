@@ -1,9 +1,6 @@
 services:
   stack-updater:
     image: ${IMAGE:-ghcr.io/w1nsid/stack-updater-app:latest}
-    build:
-      context: .
-      dockerfile: Dockerfile
     container_name: stack-updater
     ports:
       - "${HOST_PORT:-8080}:8080"
