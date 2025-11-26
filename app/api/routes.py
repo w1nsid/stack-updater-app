@@ -117,8 +117,7 @@ def list_stacks(db: Session = Depends(get_db)) -> List[dict]:
             "last_status_check": stack.last_status_check.isoformat() if stack.last_status_check else None,
             "last_updated_at": stack.last_updated_at.isoformat() if stack.last_updated_at else None,
             "is_outdated": stack.is_outdated,
-        }
-        for stack in stack_rows
+        } for stack in stack_rows
     ]
 
 
@@ -230,7 +229,8 @@ async def set_auto_update(stack_id: int, enabled: bool, db: Session = Depends(ge
 async def run_auto_update(db: Session = Depends(get_db)) -> dict:
     client = PortainerClient()
     updated_count = 0
-    outdated_stacks = db.query(Stack).filter(Stack.auto_update_enabled == True, Stack.is_outdated == True).all()  # noqa: E712
+    outdated_stacks = db.query(Stack).filter(Stack.auto_update_enabled == True,
+                                             Stack.is_outdated == True).all()  # noqa: E712
     log.info("Running auto-update for %d outdated stacks", len(outdated_stacks))
     for stack_row in outdated_stacks:
         if not stack_row.webhook_url:

@@ -44,7 +44,6 @@ def db() -> Generator[Session, None, None]:
 @pytest.fixture(scope="function")
 def client(db: Session) -> Generator[TestClient, None, None]:
     """Create a test client with database dependency override."""
-
     def override_get_db() -> Generator[Session, None, None]:
         try:
             yield db

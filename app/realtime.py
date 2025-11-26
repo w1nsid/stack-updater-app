@@ -80,7 +80,10 @@ async def broadcast_staleness(rows: Iterable[Any]) -> None:
     await manager.broadcast_json(
         {
             "type": "staleness",
-            "payload": [{"id": r.id, "is_outdated": getattr(r, "is_outdated", None)} for r in rows],
+            "payload": [{
+                "id": r.id,
+                "is_outdated": getattr(r, "is_outdated", None)
+            } for r in rows],
         }
     )
 

@@ -6,7 +6,6 @@ requiring the ``app`` package to be on ``sys.path``. Running ``uvicorn
 main:app`` from the project root will now correctly locate and load
 the FastAPI application.
 """
-
 """
 Entrypoint for the Stack Updater application.
 
