@@ -121,7 +121,7 @@ jobs:
             org.opencontainers.image.version=${{ steps.version.outputs.version }}
 
   deploy:
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     needs: [docker]
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     steps:
