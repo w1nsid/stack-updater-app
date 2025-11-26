@@ -1,14 +1,14 @@
 from __future__ import annotations
 
 import logging
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import Any, Dict, List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
 from ..config import settings
-from ..db import Base, engine, get_db
+from ..db import get_db
 from ..models.stack import Stack
 from ..realtime import broadcast_stack_update
 from ..services.portainer_client import PortainerClient
@@ -78,7 +78,7 @@ async def _apply_parsed_stack(db: Session, client: PortainerClient, parsed_data:
         indicator = await client.get_stack_image_indicator(stack_id, refresh=True)
         image_status = indicator.get("Status")
         image_message = indicator.get("Message")
-        current_time = datetime.utcnow()
+        current_time = datetime.now(timezone.utc)
         if stack_row.image_status != image_status:
             stack_row.image_status = image_status
             has_changes = True
@@ -89,17 +89,15 @@ async def _apply_parsed_stack(db: Session, client: PortainerClient, parsed_data:
     except Exception:
         stack_row.image_status = "Error"
         stack_row.image_message = "Failed to fetch image indicator"
-        stack_row.image_last_checked = datetime.utcnow()
+        stack_row.image_last_checked = datetime.now(timezone.utc)
         has_changes = True
 
     if has_changes:
-        stack_row.updated_at = datetime.utcnow()
+        stack_row.updated_at = datetime.now(timezone.utc)
     return is_new_stack
 
 
-@router.on_event("startup")
-def _init_db() -> None:
-    Base.metadata.create_all(bind=engine)
+# NOTE: Database initialization is handled in app/main.py lifespan handler
 
 
 @router.get("/stacks")
@@ -166,7 +164,7 @@ async def get_indicator(stack_id: int, refresh: bool = False, db: Session = Depe
         indicator = await client.get_stack_image_indicator(stack_id, refresh=refresh)
         stack_row.image_status = indicator.get("Status")
         stack_row.image_message = indicator.get("Message")
-        stack_row.image_last_checked = datetime.utcnow()
+        stack_row.image_last_checked = datetime.now(timezone.utc)
         db.commit()
     except Exception as e:
         log.exception("Failed to fetch indicator for stack %s: %s", stack_id, e)
@@ -196,13 +194,13 @@ async def trigger_update(stack_id: int, db: Session = Depends(get_db)) -> dict:
     if not webhook_success:
         log.error("Webhook update failed for stack %s", stack_id)
         raise HTTPException(status_code=502, detail="Webhook call failed")
-    stack_row.last_updated_at = datetime.utcnow()
+    stack_row.last_updated_at = datetime.now(timezone.utc)
     # Optionally, after update, fetch indicator without refresh to snapshot status
     try:
         indicator = await client.get_stack_image_indicator(stack_id, refresh=False)
         stack_row.image_status = indicator.get("Status")
         stack_row.image_message = indicator.get("Message")
-        stack_row.image_last_checked = datetime.utcnow()
+        stack_row.image_last_checked = datetime.now(timezone.utc)
     except Exception:
         pass
     db.commit()
@@ -240,7 +238,7 @@ async def run_auto_update(db: Session = Depends(get_db)) -> dict:
             continue
         webhook_success = await client.trigger_webhook(stack_row.webhook_url)
         if webhook_success:
-            stack_row.last_updated_at = datetime.utcnow()
+            stack_row.last_updated_at = datetime.now(timezone.utc)
             stack_row.is_outdated = False
             updated_count += 1
     db.commit()
@@ -261,12 +259,16 @@ async def check_now(stack_id: int, db: Session = Depends(get_db)) -> dict:
         log.warning("Check-now requested for missing stack %s", stack_id)
         raise HTTPException(status_code=404, detail="Stack not found")
 
-    current_time = datetime.utcnow()
+    current_time = datetime.now(timezone.utc)
     stack_row.last_status_check = current_time
     staleness_threshold = timedelta(seconds=settings.outdated_after_seconds)
     is_outdated = True
     if stack_row.last_updated_at:
-        is_outdated = current_time - stack_row.last_updated_at > staleness_threshold
+        # Ensure timezone-aware comparison (SQLite stores naive datetimes)
+        last_updated = stack_row.last_updated_at
+        if last_updated.tzinfo is None:
+            last_updated = last_updated.replace(tzinfo=timezone.utc)
+        is_outdated = current_time - last_updated > staleness_threshold
     stack_row.is_outdated = is_outdated
     db.commit()
     try:

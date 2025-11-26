@@ -7,6 +7,8 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
+__all__ = ["Settings", "settings"]
+
 
 @dataclass(frozen=True)
 class Settings:

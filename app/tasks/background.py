@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import asyncio
 import logging
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 from sqlalchemy.orm import Session
 
@@ -27,14 +27,18 @@ async def status_refresher():
 
 
 def _refresh_statuses(db: Session) -> None:
-    now = datetime.utcnow()
+    now = datetime.now(timezone.utc)
     rows = db.query(Stack).all()
     threshold = timedelta(seconds=settings.outdated_after_seconds)
     for row in rows:
         row.last_status_check = now
         is_outdated = True
         if row.last_updated_at:
-            is_outdated = now - row.last_updated_at > threshold
+            # Ensure timezone-aware comparison (SQLite stores naive datetimes)
+            last_updated = row.last_updated_at
+            if last_updated.tzinfo is None:
+                last_updated = last_updated.replace(tzinfo=timezone.utc)
+            is_outdated = now - last_updated > threshold
         row.is_outdated = is_outdated
     db.commit()
     # Snapshot payload BEFORE session/context ends to avoid detached access.

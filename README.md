@@ -49,8 +49,28 @@ We use uv with `pyproject.toml` and a checked-in `uv.lock` for fast, reproducibl
 
 4. Open `http://127.0.0.1:8080`.
 
-The database file `database.db` will be created automatically in the `app/`
-directory on first run.
+The database file `app.db` will be created automatically on first run.
+
+## Running Tests
+
+Install dev dependencies and run the test suite:
+
+```bash
+uv sync --all-extras
+uv run pytest
+```
+
+Run with coverage report:
+
+```bash
+uv run pytest --cov=app --cov-report=term-missing
+```
+
+Run linting:
+
+```bash
+uv run ruff check app/ tests/
+```
 
 ## Using Docker Compose (Recommended)
 
@@ -186,108 +206,67 @@ Use via Command Palette: “Tasks: Run Task”.
 
 ## Configuration
 
-- **Automatic updates:** When adding or editing a stack you can enable
-  automatic updates by checking the corresponding box and specifying an
-  interval in hours (e.g. 24 for daily updates). The background scheduler
-  thread will call the webhook when this interval has elapsed since the last
-  successful update.
-- **Database path:** The SQLite database is stored at `app/database.db` by
-  default. You can customise the location by editing the `DB_PATH` constant in
-  `app/main.py`.
+Configuration is done via environment variables (see `.env` file):
 
-## Contributing
+| Variable | Default | Purpose |
+|----------|---------|---------|
+| `PORTAINER_URL` | `http://localhost:9000` | Base URL for Portainer API |
+| `PORTAINER_API_KEY` | - | API key with stack read/webhook permissions |
+| `DATABASE_URL` | `sqlite:///./app.db` | SQLAlchemy database connection string |
+| `REFRESH_INTERVAL` | `30` | Seconds between background staleness checks |
+| `OUTDATED_AFTER_SECONDS` | `86400` | Seconds until a stack is marked outdated (default 24h) |
+| `VERIFY_SSL` | `true` | Verify SSL certificates for Portainer API |
+| `CF_ACCESS_CLIENT_ID` | - | Cloudflare Access service token client ID (optional) |
+| `CF_ACCESS_CLIENT_SECRET` | - | Cloudflare Access service token secret (optional) |
+| `LOG_LEVEL` | `INFO` | Logging level (DEBUG, INFO, WARNING, ERROR) |
+| `LOG_FILE` | `app.log` | Log file path |
+| `LOG_MAX_BYTES` | `1048576` | Max log file size before rotation (1MB) |
+| `LOG_BACKUP_COUNT` | `3` | Number of rotated log files to keep |
 
-Contributions are welcome! Feel free to open issues or submit pull
-requests if you spot bugs or have improvements to suggest. When adding
-features please ensure they remain lightweight to preserve the simple
-deployment workflow.
 
-The dashboard UI was upgraded for a cleaner, more modern feel:
 
-- Automatic dark/light theme based on system, with manual toggle (moon / sun icon in header)
+## Dashboard UI
+
+The dashboard features a modern, responsive design:
+
+- Automatic dark/light theme based on system preference, with manual toggle
 - Lucide SVG icon set for buttons and status badges
 - Animated processing badge (pulse + spinner)
-- Refreshed table styling, cards, soft borders, improved spacing scale
+- Stats cards showing Updated/Outdated/Errors/Total counts
 - CSS variables for easy theming in `app/static/style.css`
 
 ### Status Badge Legend
+
 | Status | Visual |
 |--------|--------|
 | Updated | Green badge with check icon |
 | Outdated | Yellow badge with warning triangle |
 | Error | Red badge with X icon |
-| Processing | Blue badge with spinning loader + pulse aura |
+| Processing | Blue badge with spinning loader |
 | Unknown / Skipped | Gray badge with help icon |
-
-### Customizing Theme
-Edit color and spacing tokens at the top of `style.css` (`:root` section). To force light theme, add `data-theme="light"` to `<html>` or use the toggle. Remove or adjust radial gradients for a flatter design if preferred.
-
-### Script Responsibilities
-`app/static/script.js` handles:
-
-- Theme initialization and persistence (localStorage key `stackUpdaterTheme`)
-- Switching icon (moon/sun) to reflect current theme
-- Respecting system changes if user hasn't explicitly chosen a theme
 
 ## Realtime Updates (WebSocket)
 
 The app pushes stack changes over a WebSocket at `/ws`.
 
 Events:
-
-- `{"type":"stack","payload":{...}}` – single stack changed (import, indicator refresh, update, check-now)
-- `{"type":"staleness","payload":[{"id":...,"is_outdated":...}]}` – periodic staleness evaluation from background task
-
-The client updates rows live and announces changes via a polite ARIA live region.
+- `{"type":"stack","payload":{...}}` – single stack changed
+- `{"type":"staleness","payload":[...]}` – periodic staleness evaluation
 
 ## Sorting & Filtering
 
-- Click or press Enter/Space on a table header to sort (toggles asc/desc)
+- Click table headers to sort (toggles asc/desc)
 - Search box for case-insensitive name filtering
-- Status dropdown filters by normalized status class (ok, warn, error, processing, unknown)
+- Status dropdown filters by status class
 
-## Accessibility Improvements
+## Accessibility
 
-- Focus-visible outline for interactive elements
-- Buttons have `aria-label` where textual context might be ambiguous
-- Live region announces render counts and update events
+- Focus-visible outlines for interactive elements
+- Buttons have `aria-label` attributes
+- Live region announces updates
 - Table rows focusable via `tabindex="0"`
-- `.sr-only` utility available for off-screen text
 
-## Future Ideas
+## Contributing
 
-1. Backoff/reconnect strategy for websocket
-2. Persist sort/filter state in URL query or localStorage
-3. Toast notifications and actionable errors
-4. SSE fallback if WS unavailable
-5. User-defined custom status thresholds
-
-Feel free to open an issue if you’d like any of these implemented next.
-\n+The dashboard UI was upgraded for a cleaner, more modern feel:
-\n+- Automatic dark/light theme based on system, with manual toggle (moon / sun icon in header)
-- Lucide SVG icon set for buttons and status badges
-- Animated processing badge (pulse + spinner)
-- Refreshed table styling, cards, soft borders, improved spacing scale
-- CSS variables for easy theming in `app/static/style.css`
-\n+### Status Badge Legend
-| Status | Visual |
-|--------|--------|
-| Updated | Green badge with check icon |
-| Outdated | Yellow badge with warning triangle |
-| Error | Red badge with X icon |
-| Processing | Blue badge with spinning loader + pulse aura |
-| Unknown / Skipped | Gray badge with help icon |
-\n+### Customizing Theme
-Edit color and spacing tokens at the top of `style.css` (`:root` section). To force light theme, add `data-theme="light"` to `<html>` or use the toggle. Remove or adjust radial gradients for a flatter design if preferred.
-\n+### Script Responsibilities
-`app/static/script.js` handles:
-\n+- Theme initialization and persistence (localStorage key `stackUpdaterTheme`)
-- Switching icon (moon/sun) to reflect current theme
-- Respecting system changes if user hasn't explicitly chosen a theme
-\n+### Future Enhancements (Ideas)
-1. Live status updates via Server-Sent Events or WebSocket
-2. Accessibility pass (focus rings, ARIA labels on dynamic elements)
-3. User-selectable accent color (store in localStorage)
-4. Column sorting & filtering
-5. Toast notifications for success/error actions
-\n+Feel free to propose any of these in an issue if you need them next.
+Contributions are welcome! Feel free to open issues or submit pull
+requests if you spot bugs or have improvements to suggest.
