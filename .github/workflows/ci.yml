@@ -131,10 +131,7 @@ jobs:
           CF_CLIENT_ID: ${{ secrets.CF_ACCESS_CLIENT_ID }}
           CF_CLIENT_SECRET: ${{ secrets.CF_ACCESS_CLIENT_SECRET }}
         run: |
-          echo "Client ID length: ${#CF_CLIENT_ID}"
-          echo "Client Secret length: ${#CF_CLIENT_SECRET}"
-          echo "URL length: ${#WEBHOOK_URL}"
-          curl -X POST "$WEBHOOK_URL" \
-            -H "cf-access-client-id: $CF_CLIENT_ID" \
-            -H "cf-access-client-secret: $CF_CLIENT_SECRET" \
-            -v --fail
+          curl -X POST "${WEBHOOK_URL}" \
+            -H "cf-access-client-id: ${CF_CLIENT_ID}" \
+            -H "cf-access-client-secret: ${CF_CLIENT_SECRET}" \
+            --fail --silent --show-error
