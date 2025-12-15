@@ -25,6 +25,12 @@ export class ButtonController {
         const originalContent = button.innerHTML;
         const originalDisabled = button.disabled;
 
+        // Preserve button dimensions during loading
+        const originalWidth = button.offsetWidth;
+        const originalHeight = button.offsetHeight;
+        button.style.minWidth = `${originalWidth}px`;
+        button.style.minHeight = `${originalHeight}px`;
+
         try {
             button.disabled = true;
             button.classList.add('loading');
@@ -58,6 +64,8 @@ export class ButtonController {
         } finally {
             button.disabled = originalDisabled;
             button.classList.remove('loading');
+            button.style.minWidth = '';
+            button.style.minHeight = '';
             button.innerHTML = originalContent;
             refreshIcons();
             this.loadingButtons.delete(button);

@@ -184,16 +184,6 @@ button.loading,
 .button.loading {
     pointer-events: none;
     opacity: 0.8;
-    min-width: max-content;
-}
-
-/* Preserve header button widths during loading */
-.header-actions button {
-    min-width: 120px;
-}
-
-.header-actions .icon-btn {
-    min-width: 40px;
 }
 
 /* Connection status */

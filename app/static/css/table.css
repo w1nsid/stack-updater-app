@@ -13,6 +13,7 @@
 table {
     width: 100%;
     border-collapse: collapse;
+    table-layout: fixed;
 }
 
 thead {
@@ -36,14 +37,25 @@ thead th {
     user-select: none;
 }
 
-thead th:nth-child(2),
-thead th:nth-child(3),
-thead th:nth-child(4) {
-    width: 140px;
+/* Name column - auto width (takes remaining space) */
+thead th:first-child {
+    width: auto;
 }
 
+/* Status column */
+thead th:nth-child(2) {
+    width: 130px;
+}
+
+/* Date columns */
+thead th:nth-child(3),
+thead th:nth-child(4) {
+    width: 130px;
+}
+
+/* Actions column */
 thead th:last-child {
-    width: 200px;
+    width: 180px;
     text-align: right;
 }
 
@@ -53,11 +65,11 @@ thead th:hover {
 }
 
 tbody td {
-    padding: var(--space-4);
+    padding: var(--space-3) var(--space-4);
     border-bottom: 1px solid var(--border);
     vertical-align: middle;
     font-size: 14px;
-    transition: all var(--transition-fast) ease;
+    transition: background var(--transition-fast) ease;
 }
 
 tbody td[data-col="indicator"] {
@@ -91,8 +103,6 @@ tbody tr:nth-child(5) {
 
 tbody tr:hover {
     background: var(--panel-hover);
-    transform: scale(1.01);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
 tbody tr:last-child td {
@@ -127,18 +137,15 @@ tbody tr:hover .cell-name-inner .icon-stack {
 
 .cell-status {
     text-align: center;
-    width: 140px;
 }
 
 .cell-date {
     color: var(--text-secondary);
     font-size: 13px;
-    width: 140px;
 }
 
 .cell-actions {
     white-space: nowrap;
-    width: 200px;
     text-align: right;
 }
 
@@ -147,21 +154,22 @@ tbody tr:hover .cell-name-inner .icon-stack {
     display: inline-flex;
     gap: var(--space-2);
     align-items: center;
-    justify-content: flex-end;
 }
 
 /* Small button variant for table actions */
 .btn-sm {
-    height: 32px;
-    padding: 6px 12px;
+    height: 28px;
+    padding: 4px 10px;
     font-size: 12px;
-    gap: 6px;
+    gap: 4px;
+    white-space: nowrap;
 }
 
 .btn-sm i,
 .btn-sm svg {
     width: 14px;
     height: 14px;
+    flex-shrink: 0;
 }
 
 .btn-label {
