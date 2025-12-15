@@ -3,23 +3,17 @@
    ========================================================================== */
 
 .table-wrapper {
-    --action-panel-width: clamp(12rem, 28%, 18rem);
     position: relative;
     border-radius: var(--radius);
     border: 0.07rem solid var(--border);
     background: var(--panel-2);
     box-shadow: var(--shadow-sm);
-    overflow: visible;
+    overflow: hidden;
 }
 
 .table-shell {
     border-radius: inherit;
     overflow: hidden;
-    transition: margin-right var(--transition) ease;
-}
-
-.table-wrapper.actions-visible .table-shell {
-    margin-right: var(--action-panel-width);
 }
 
 table {
@@ -50,16 +44,19 @@ thead th {
 }
 
 thead th:first-child {
-    width: clamp(14rem, 32%, 22rem);
+    width: clamp(11rem, 28%, 18rem);
+    text-align: left;
 }
 
-thead th:nth-child(2) {
-    width: 8.5rem;
-}
-
+thead th:nth-child(2),
 thead th:nth-child(3),
 thead th:nth-child(4) {
-    width: 8.5rem;
+    width: 8rem;
+}
+
+thead th:last-child {
+    width: 10.5rem;
+    text-align: right;
 }
 
 thead th:hover {
@@ -99,12 +96,13 @@ tbody tr:last-child td {
 /* Cell specific styles */
 .cell-name {
     font-weight: 600;
+    text-align: left;
 }
 
 .cell-name-inner {
     display: inline-flex;
     align-items: center;
-    justify-content: center;
+    justify-content: flex-start;
     gap: var(--space-3);
     max-width: 100%;
 }
@@ -141,6 +139,26 @@ tbody tr:hover .cell-name-inner .icon-stack {
     font-size: 0.85rem;
 }
 
+.cell-actions {
+    text-align: right;
+    white-space: nowrap;
+}
+
+.action-group {
+    display: inline-flex;
+    gap: 0.5rem;
+    opacity: 0;
+    transform: translateY(0.25rem);
+    transition: opacity var(--transition-fast) ease, transform var(--transition-fast) ease;
+}
+
+tbody tr:hover .action-group,
+tbody tr:focus-within .action-group {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+
 /* Empty state */
 .empty-state {
     text-align: center;
@@ -165,67 +183,4 @@ tbody tr:hover .cell-name-inner .icon-stack {
 .empty-hint {
     font-size: 0.85rem;
     opacity: 0.7;
-}
-
-/* ==========================================================================
-   Row Action Slider
-   ========================================================================== */
-
-.row-action-panel {
-    position: absolute;
-    top: 0;
-    right: 0;
-    bottom: 0;
-    width: var(--action-panel-width);
-    background: var(--panel);
-    border-left: 0.07rem solid var(--border);
-    box-shadow: -0.5rem 0 1.5rem rgba(9, 10, 20, 0.4);
-    transform: translateX(110%);
-    transition: transform var(--transition) ease, opacity var(--transition) ease;
-    opacity: 0;
-    pointer-events: none;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 1.5rem;
-    z-index: 5;
-}
-
-.row-action-panel::before {
-    content: '';
-    position: absolute;
-    inset: 0.4rem;
-    border-radius: var(--radius);
-    background: radial-gradient(circle at 30% 20%, rgba(255, 255, 255, 0.04), transparent);
-    pointer-events: none;
-}
-
-.row-action-panel.visible {
-    transform: translateX(0);
-    opacity: 1;
-    pointer-events: auto;
-}
-
-.row-action-content {
-    position: relative;
-    z-index: 1;
-    width: 100%;
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
-}
-
-.row-action-label {
-    text-transform: uppercase;
-    font-size: 0.7rem;
-    letter-spacing: 0.12rem;
-    color: var(--muted);
-}
-
-.row-action-name {
-    font-size: 1rem;
-    font-weight: 600;
-    color: var(--text);
-    margin-bottom: 0.5rem;
-    line-height: 1.2;
 }

@@ -31,28 +31,34 @@ export class ButtonController {
         button.style.minWidth = `${originalWidth}px`;
         button.style.minHeight = `${originalHeight}px`;
 
+        const isHeaderButton = button.classList.contains('header-btn');
+
         try {
             button.disabled = true;
             button.classList.add('loading');
 
             // Set loading content with spinner
-            const icon = button.querySelector('i, svg');
-            if (icon) {
-                icon.setAttribute('data-lucide', 'loader-2');
-            }
+            if (!isHeaderButton) {
+                const icon = button.querySelector('i, svg');
+                if (icon) {
+                    icon.setAttribute('data-lucide', 'loader-2');
+                }
 
-            const textSpan = button.querySelector('.btn-text') || button.querySelector('span');
-            if (textSpan && loadingText) {
-                textSpan.textContent = loadingText;
+                const textSpan = button.querySelector('.btn-text') || button.querySelector('span');
+                if (textSpan && loadingText) {
+                    textSpan.textContent = loadingText;
+                }
             }
 
             // Refresh icons first to convert to SVG, then add spin class
             refreshIcons();
 
             // Add spin class to the newly created SVG
-            const svgIcon = button.querySelector('svg');
-            if (svgIcon) {
-                svgIcon.classList.add('icon', 'spin');
+            if (!isHeaderButton) {
+                const svgIcon = button.querySelector('svg');
+                if (svgIcon) {
+                    svgIcon.classList.add('icon', 'spin');
+                }
             }
 
             await action();
@@ -66,7 +72,9 @@ export class ButtonController {
             button.classList.remove('loading');
             button.style.minWidth = '';
             button.style.minHeight = '';
-            button.innerHTML = originalContent;
+            if (!isHeaderButton) {
+                button.innerHTML = originalContent;
+            }
             refreshIcons();
             this.loadingButtons.delete(button);
         }

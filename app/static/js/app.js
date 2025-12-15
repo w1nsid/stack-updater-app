@@ -98,15 +98,10 @@ class StackUpdaterApp {
         });
 
         // Table row actions (delegated)
-        const actionButtonTargets = [
-            document.getElementById('stackTableBody'),
-            document.getElementById('rowActionPanel')
-        ];
-        actionButtonTargets.forEach(target => {
-            if (target) {
-                target.addEventListener('click', (e) => this.handleActionButtonClick(e));
-            }
-        });
+        const tbody = document.getElementById('stackTableBody');
+        if (tbody) {
+            tbody.addEventListener('click', (e) => this.handleActionButtonClick(e));
+        }
     }
 
     /**

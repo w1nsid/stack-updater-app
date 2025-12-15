@@ -19,19 +19,17 @@
             <span>Stack Updater</span>
         </div>
         <div class="header-actions">
-            <button id="importBtn" class="ghost header-btn">
-                <span class="btn-content">
+            <button id="importBtn" class="header-btn">
+                <span class="label">
                     <i data-lucide="download"></i>
-                    <span class="btn-text">Import</span>
+                    <span>Import</span>
                 </span>
-                <span class="btn-spinner" aria-hidden="true"></span>
             </button>
-            <button id="refreshAllBtn" class="ghost header-btn">
-                <span class="btn-content">
+            <button id="refreshAllBtn" class="header-btn">
+                <span class="label">
                     <i data-lucide="rotate-cw"></i>
-                    <span class="btn-text">Refresh All</span>
+                    <span>Refresh All</span>
                 </span>
-                <span class="btn-spinner" aria-hidden="true"></span>
             </button>
             <button id="themeToggle" class="theme-switch" role="switch" aria-checked="false"
                 aria-label="Toggle theme" title="Toggle theme">
@@ -117,19 +115,13 @@
                                 <th data-key="image_status" scope="col">Image Status</th>
                                 <th data-key="image_last_checked" scope="col">Last Checked</th>
                                 <th data-key="last_updated_at" scope="col">Last Updated</th>
+                                <th scope="col">Actions</th>
                             </tr>
                         </thead>
                         <tbody id="stackTableBody">
                         </tbody>
                     </table>
                 </div>
-                <aside class="row-action-panel" id="rowActionPanel" aria-hidden="true">
-                    <div class="row-action-content">
-                        <p class="row-action-label">Actions for</p>
-                        <p class="row-action-name" data-role="action-name">—</p>
-                        <div class="row-action-buttons" data-role="action-buttons"></div>
-                    </div>
-                </aside>
             </div>
         </div>
     </div>
