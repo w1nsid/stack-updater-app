@@ -3,7 +3,7 @@ API Routes - Thin controller layer.
 
 Routes should only handle:
 - HTTP request parsing
-- Input validation  
+- Input validation
 - Calling service layer
 - HTTP response formatting
 
@@ -37,7 +37,7 @@ def _get_service(db: Session = Depends(get_db)) -> StackService:
 def list_stacks(service: StackService = Depends(_get_service)) -> list[dict]:
     """
     Get all stacks from local database.
-    
+
     This returns cached data. Use /stacks/sync to refresh from Portainer.
     """
     stacks = service.get_all_stacks()
@@ -48,7 +48,7 @@ def list_stacks(service: StackService = Depends(_get_service)) -> list[dict]:
 async def sync_stacks(remove_missing: bool = False, service: StackService = Depends(_get_service)) -> dict:
     """
     Sync stacks from Portainer API to local database.
-    
+
     Args:
         remove_missing: If True, remove stacks that no longer exist in Portainer
     """
@@ -72,7 +72,7 @@ async def sync_stacks(remove_missing: bool = False, service: StackService = Depe
 async def import_stacks(service: StackService = Depends(_get_service)) -> dict:
     """
     Import stacks from Portainer (legacy endpoint).
-    
+
     Deprecated: Use POST /stacks/sync instead.
     """
     result = await service.sync_from_portainer()
@@ -98,7 +98,7 @@ def get_stack(stack_id: int, service: StackService = Depends(_get_service)) -> d
 async def get_indicator(stack_id: int, refresh: bool = False, service: StackService = Depends(_get_service)) -> dict:
     """
     Get image status indicator for a stack.
-    
+
     Args:
         stack_id: The stack ID
         refresh: If True, ask Portainer to re-check images (slower but fresh)
@@ -125,7 +125,7 @@ async def get_indicator(stack_id: int, refresh: bool = False, service: StackServ
 async def trigger_update(stack_id: int, service: StackService = Depends(_get_service)) -> dict:
     """
     Trigger a stack update via webhook.
-    
+
     This calls the Portainer webhook to pull and redeploy the stack.
     """
     log.info("Triggering update for stack %s", stack_id)
@@ -166,7 +166,7 @@ async def set_auto_update(stack_id: int, enabled: bool, service: StackService = 
 async def refresh_all_indicators(force: bool = False, service: StackService = Depends(_get_service)) -> dict:
     """
     Refresh indicators for all stacks.
-    
+
     Args:
         force: If True, ask Portainer to re-check all images (slower)
     """
@@ -181,7 +181,7 @@ async def refresh_all_indicators(force: bool = False, service: StackService = De
 async def run_auto_update(service: StackService = Depends(_get_service)) -> dict:
     """
     Run auto-updates for all eligible stacks.
-    
+
     This triggers updates for stacks that have:
     - auto_update_enabled = True
     - image_status = 'outdated'
