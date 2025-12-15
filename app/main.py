@@ -1,11 +1,10 @@
 from __future__ import annotations
 
-import asyncio
 import os
 from contextlib import asynccontextmanager
 from pathlib import Path
 
-from fastapi import FastAPI, Request, WebSocket
+from fastapi import FastAPI, Request
 from fastapi.middleware.trustedhost import TrustedHostMiddleware
 from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
@@ -15,8 +14,6 @@ from starlette.middleware.base import BaseHTTPMiddleware
 from .api.routes import router as api_router
 from .db import Base, engine
 from .logging_setup import setup_logging
-from .realtime import manager
-from .tasks.background import status_refresher
 
 STATIC_DIR = Path("app/static")
 
@@ -43,6 +40,9 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
         # Cache control for API responses
         if request.url.path.startswith("/api/"):
             response.headers["Cache-Control"] = "no-store, max-age=0"
+        # Cache control for static JS/CSS files during development
+        if request.url.path.startswith("/static/") and request.url.path.endswith((".js", ".css")):
+            response.headers["Cache-Control"] = "no-cache, must-revalidate"
         return response
 
 
@@ -52,7 +52,6 @@ async def lifespan(app: FastAPI):
     # Startup
     setup_logging()
     Base.metadata.create_all(bind=engine)
-    asyncio.create_task(status_refresher())
     yield
     # Shutdown (cleanup can go here if needed)
 
@@ -90,16 +89,3 @@ async def health_check():
 @app.get("/", response_class=HTMLResponse)
 async def index(request: Request):
     return templates.TemplateResponse("index.html", {"request": request})
-
-
-@app.websocket("/ws")
-async def ws_endpoint(ws: WebSocket):
-    await manager.connect(ws)
-    try:
-        while True:
-            # Keep connection alive and allow client pings
-            await ws.receive_text()
-    except Exception:
-        pass
-    finally:
-        await manager.disconnect(ws)

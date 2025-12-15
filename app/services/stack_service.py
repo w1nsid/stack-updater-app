@@ -115,7 +115,7 @@ class UpdateResult:
 class StackService:
     """
     Service layer for stack operations.
-    
+
     This class centralizes all business logic for:
     - Syncing stacks from Portainer
     - Managing stack indicators
@@ -145,11 +145,6 @@ class StackService:
         """Get raw Stack model (for internal use)."""
         return self._db.get(Stack, stack_id)
 
-    def get_outdated_stacks(self) -> List[StackDTO]:
-        """Get all stacks that have outdated images."""
-        stacks = self._db.query(Stack).filter(Stack.image_status == ImageStatus.OUTDATED.value).all()
-        return [StackDTO.from_model(s) for s in stacks]
-
     def get_auto_update_stacks(self) -> List[StackDTO]:
         """Get all stacks with auto-update enabled that are outdated."""
         stacks = self._db.query(Stack).filter(
@@ -164,17 +159,17 @@ class StackService:
     async def sync_from_portainer(self, remove_missing: bool = False) -> SyncResult:
         """
         Sync stacks from Portainer API to local database.
-        
+
         Args:
             remove_missing: If True, remove stacks from DB that no longer exist in Portainer
-            
+
         Returns:
             SyncResult with counts of imported, updated, removed stacks
         """
         result = SyncResult(imported=0, updated=0, removed=0, errors=[])
 
         try:
-            portainer_stacks = await self._client.list_stacks_with_webhooks()
+            portainer_stacks = await self._client.get_stacks_with_webhooks()
         except Exception as e:
             self._log.exception("Failed to fetch stacks from Portainer")
             result.errors.append(f"Failed to fetch stacks: {e}")
@@ -214,7 +209,7 @@ class StackService:
     def _upsert_stack_from_portainer(self, stack_info: StackInfo) -> bool:
         """
         Create or update a Stack row from Portainer data.
-        
+
         Returns True if a new row was created, False if existing was updated.
         """
         stack = self._db.get(Stack, stack_info.id)
@@ -253,7 +248,7 @@ class StackService:
             return UpdateResult(success=False, message="Stack not found")
 
         try:
-            indicator = await self._client.get_stack_image_indicator(stack_id, refresh=force_refresh)
+            indicator = await self._client.fetch_image_status(stack_id, refresh=force_refresh)
 
             stack.image_status = indicator.get("Status")
             stack.image_message = indicator.get("Message")
@@ -315,7 +310,7 @@ class StackService:
             return UpdateResult(success=False, message="No webhook configured for this stack")
 
         try:
-            success = await self._client.trigger_webhook(stack.webhook_url)
+            success = await self._client.call_webhook(stack.webhook_url)
 
             if success:
                 stack.last_updated_at = datetime.now(timezone.utc)

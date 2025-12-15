@@ -3,7 +3,7 @@ from __future__ import annotations
 import asyncio
 import json
 import logging
-from typing import Any, Dict, Iterable, List
+from typing import Any, Dict, List
 
 from fastapi import WebSocket
 from fastapi.websockets import WebSocketDisconnect
@@ -13,8 +13,6 @@ __all__ = [
     "ConnectionManager",
     "broadcast_stack_update",
     "broadcast_stacks_update",
-    "broadcast_staleness",
-    "broadcast_staleness_payload",
 ]
 
 log = logging.getLogger(__name__)
@@ -99,23 +97,3 @@ async def broadcast_stack_update(row: Any) -> None:
 async def broadcast_stacks_update(stacks: List[Dict[str, Any]]) -> None:
     """Broadcast a full list of stacks to all connected clients (for sync/refresh-all)."""
     await manager.broadcast_json({"type": "stacks_sync", "payload": stacks})
-
-
-async def broadcast_staleness(rows: Iterable[Any]) -> None:
-    await manager.broadcast_json(
-        {
-            "type": "staleness",
-            "payload": [{
-                "id": r.id,
-                "is_outdated": getattr(r, "is_outdated", None)
-            } for r in rows],
-        }
-    )
-
-
-async def broadcast_staleness_payload(payload: list[dict]) -> None:
-    """Broadcast a precomputed staleness payload of primitives.
-
-    Use this when ORM instances may be detached (e.g., after commit/close).
-    """
-    await manager.broadcast_json({"type": "staleness", "payload": payload})

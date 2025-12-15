@@ -17,7 +17,6 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
 from ..db import get_db
-from ..realtime import broadcast_stack_update, broadcast_stacks_update
 from ..services.stack_service import StackService, get_stack_service
 
 router = APIRouter(prefix="/api", tags=["stacks"])
@@ -60,13 +59,6 @@ async def sync_stacks(remove_missing: bool = False, service: StackService = Depe
     if result.errors:
         log.warning("Sync completed with errors: %s", result.errors)
 
-    # Broadcast updated stacks to connected clients
-    try:
-        stacks = service.get_all_stacks()
-        await broadcast_stacks_update([s.to_dict() for s in stacks])
-    except Exception:
-        pass
-
     return {
         "imported": result.imported,
         "updated": result.updated,
@@ -84,13 +76,6 @@ async def import_stacks(service: StackService = Depends(_get_service)) -> dict:
     Deprecated: Use POST /stacks/sync instead.
     """
     result = await service.sync_from_portainer()
-
-    # Broadcast updated stacks
-    try:
-        stacks = service.get_all_stacks()
-        await broadcast_stacks_update([s.to_dict() for s in stacks])
-    except Exception:
-        pass
 
     return {"imported": result.imported}
 
@@ -125,13 +110,6 @@ async def get_indicator(stack_id: int, refresh: bool = False, service: StackServ
     if not result.success and result.message == "Stack not found":
         raise HTTPException(status_code=404, detail="Stack not found")
 
-    # Broadcast update to connected clients
-    if result.stack:
-        try:
-            await broadcast_stack_update(result.stack.to_dict())
-        except Exception:
-            pass
-
     if result.stack:
         return {
             "id": result.stack.id,
@@ -162,13 +140,6 @@ async def trigger_update(stack_id: int, service: StackService = Depends(_get_ser
         else:
             raise HTTPException(status_code=502, detail=f"Update failed: {result.message}")
 
-    # Broadcast update to connected clients
-    if result.stack:
-        try:
-            await broadcast_stack_update(result.stack.to_dict())
-        except Exception:
-            pass
-
     return {"updated": True, "stack": result.stack.to_dict() if result.stack else None}
 
 
@@ -179,13 +150,6 @@ async def set_auto_update(stack_id: int, enabled: bool, service: StackService = 
 
     if not result.success:
         raise HTTPException(status_code=404, detail="Stack not found")
-
-    # Broadcast update to connected clients
-    if result.stack:
-        try:
-            await broadcast_stack_update(result.stack.to_dict())
-        except Exception:
-            pass
 
     return {
         "id": result.stack.id if result.stack else stack_id,
@@ -210,13 +174,6 @@ async def refresh_all_indicators(force: bool = False, service: StackService = De
 
     result = await service.refresh_all_indicators(force_refresh=force)
 
-    # Broadcast updated stacks
-    try:
-        stacks = service.get_all_stacks()
-        await broadcast_stacks_update([s.to_dict() for s in stacks])
-    except Exception:
-        pass
-
     return result
 
 
@@ -232,12 +189,5 @@ async def run_auto_update(service: StackService = Depends(_get_service)) -> dict
     log.info("Running auto-updates")
 
     result = await service.run_auto_updates()
-
-    # Broadcast updated stacks
-    try:
-        stacks = service.get_all_stacks()
-        await broadcast_stacks_update([s.to_dict() for s in stacks])
-    except Exception:
-        pass
 
     return {"updated": result["updated"], "failed": result["failed"]}

@@ -1,20 +1,29 @@
+"""Portainer API Client.
+
+Clean, straightforward client for interacting with Portainer's REST API.
+"""
+
 from __future__ import annotations
 
 import logging
 from dataclasses import dataclass
 from datetime import datetime, timezone
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 import httpx
 
 from ..config import settings
 
+logger = logging.getLogger(__name__)
+
 
 @dataclass(frozen=True)
 class StackInfo:
+    """Represents a Portainer stack with essential information."""
+
     id: int
     name: str
-    type: int | None
+    stack_type: int | None
     webhook_url: str | None
     created_at: datetime | None
     updated_at: datetime | None
@@ -24,179 +33,198 @@ class StackInfo:
         return bool(self.webhook_url)
 
 
-def _to_dt(ts: Any) -> datetime | None:
+def parse_timestamp(unix_timestamp: Any) -> datetime | None:
+    """Convert Unix timestamp to datetime. Returns None if invalid."""
+    if unix_timestamp is None:
+        return None
     try:
-        if ts is None:
-            return None
-        # Portainer returns unix seconds
-        return datetime.fromtimestamp(int(ts), tz=timezone.utc)
-    except Exception:
+        return datetime.fromtimestamp(int(unix_timestamp), tz=timezone.utc)
+    except (ValueError, TypeError, OSError):
         return None
 
 
 class PortainerClient:
+    """Client for Portainer API interactions."""
+
+    DEFAULT_TIMEOUT = 30.0
+
     def __init__(
         self,
-        base_url: Optional[str] = None,
-        api_key: Optional[str] = None,
-        verify_ssl: Optional[bool] = None,
-        cloudflare_client_id: Optional[str] = None,
-        cloudflare_client_secret: Optional[str] = None,
+        base_url: str | None = None,
+        api_key: str | None = None,
+        verify_ssl: bool | None = None,
+        cloudflare_client_id: str | None = None,
+        cloudflare_client_secret: str | None = None,
     ) -> None:
-        self._log = logging.getLogger(__name__)
         self.base_url = (base_url or settings.portainer_url).rstrip("/")
         self.api_key = api_key or settings.portainer_api_key
-        self.verify_ssl = settings.verify_ssl if verify_ssl is None else verify_ssl
-        self._headers = {"Accept": "application/json"}
-        if self.api_key:
-            # Portainer expects X-API-Key header with the API key
-            self._headers["X-API-Key"] = self.api_key
-        # Allow explicit args to override environment settings
-        cf_id = cloudflare_client_id or settings.cf_access_client_id
-        cf_secret = cloudflare_client_secret or settings.cf_access_client_secret
-        # Keep CF headers separate so we can avoid sending API key to webhooks
-        self._cf_headers: dict[str, str] = {}
-        if cf_id and cf_secret:
-            # Cloudflare access headers
-            self._headers["CF-Access-Client-ID"] = cf_id
-            self._headers["CF-Access-Client-Secret"] = cf_secret
-            self._cf_headers["CF-Access-Client-ID"] = cf_id
-            self._cf_headers["CF-Access-Client-Secret"] = cf_secret
+        self.verify_ssl = verify_ssl if verify_ssl is not None else settings.verify_ssl
 
-    # -------- Raw endpoints --------
-    async def list_stacks(self) -> List[Dict[str, Any]]:
-        url = f"{self.base_url}/api/stacks"
-        self._log.info("GET %s", url)
-        async with httpx.AsyncClient(verify=self.verify_ssl, timeout=30.0) as client:
-            try:
-                r = await client.get(url, headers=self._headers)
-                self._log.debug("Response %s %s", r.status_code, r.text[:500])
-                r.raise_for_status()
-                stacks = r.json()
-                self._log.info("Fetched %d stacks", len(stacks) if isinstance(stacks, list) else -1)
-                return stacks  # type: ignore[return-value]
-            except httpx.HTTPError as e:
-                self._log.exception("Failed to list stacks: %s", e)
-                raise
-
-    async def get_stack(self, stack_id: int) -> Dict[str, Any]:
-        url = f"{self.base_url}/api/stacks/{stack_id}"
-        self._log.info("GET %s", url)
-        async with httpx.AsyncClient(verify=self.verify_ssl, timeout=30.0) as client:
-            try:
-                r = await client.get(url, headers=self._headers)
-                self._log.debug("Response %s %s", r.status_code, r.text[:500])
-                r.raise_for_status()
-                return r.json()
-            except httpx.HTTPError as e:
-                self._log.exception("Failed to get stack %s: %s", stack_id, e)
-                raise
-
-    async def get_stack_image_indicator(self, stack_id: int, refresh: bool) -> Dict[str, Any]:
-        url = f"{self.base_url}/api/stacks/{stack_id}/images_status"
-        self._log.info("GET %s?refresh=%s", url, refresh)
-        async with httpx.AsyncClient(verify=self.verify_ssl, timeout=30.0) as client:
-            try:
-                r = await client.get(url, headers=self._headers, params={"refresh": refresh})
-                self._log.debug("Response %s %s", r.status_code, r.text[:500])
-                r.raise_for_status()
-                return r.json()
-            except httpx.HTTPError as e:
-                self._log.exception("Failed to get image indicator for %s: %s", stack_id, e)
-                raise
-
-    # -------- High-level helpers --------
-    def _extract_webhook_token(self, stack_obj: Dict[str, Any]) -> Optional[str]:
-        value = stack_obj.get("Webhook") or stack_obj.get("webhook")
-        if isinstance(value, str) and value:
-            return value
-        return None
-
-    def build_webhook_url(self, token: str) -> str:
-        base = self.base_url
-        # Original path format retained
-        return f"{base}/api/stacks/webhooks/{token}"
-
-    def extract_webhook_url(self, stack_obj: Dict[str, Any]) -> Optional[str]:
-        """Return a full webhook URL built strictly from the token.
-
-        Uses only Webhook/webhook (token). Ignores EndpointId entirely.
-        Returns None if no webhook token is available.
-        """
-        token = self._extract_webhook_token(stack_obj)
-        if not token:
-            return None
-        return self.build_webhook_url(token)
-
-    def _parse_stack(self, stack_obj: Dict[str, Any]) -> StackInfo:
-        # Strict field mapping as per provided model
-        if "Id" not in stack_obj:
-            raise ValueError("Stack object missing Id")
-        try:
-            sid = int(stack_obj["Id"])  # required
-        except Exception as e:
-            raise ValueError(f"Invalid stack Id: {stack_obj.get('Id')}") from e
-
-        name = stack_obj.get("Name")
-        name = str(name) if name is not None else f"stack-{sid}"
-
-        stype_raw = stack_obj.get("Type")
-        try:
-            stype = int(stype_raw) if stype_raw is not None else None
-        except Exception:
-            stype = None
-
-        token = self._extract_webhook_token(stack_obj)
-        url = self.build_webhook_url(token) if token else None
-
-        created = _to_dt(stack_obj.get("CreationDate"))
-        updated = _to_dt(stack_obj.get("UpdateDate"))
-
-        return StackInfo(
-            id=sid,
-            name=name,
-            type=stype,
-            webhook_url=url,
-            created_at=created,
-            updated_at=updated,
+        # Build headers for API requests
+        self.api_headers = self._build_api_headers(
+            api_key=self.api_key,
+            cf_client_id=cloudflare_client_id or settings.cf_access_client_id,
+            cf_client_secret=cloudflare_client_secret or settings.cf_access_client_secret,
         )
 
-    async def list_stack_infos(self) -> List[StackInfo]:
-        raw = await self.list_stacks()
-        infos: List[StackInfo] = []
-        for s in raw:
+        # Webhook requests only need Cloudflare headers (no API key)
+        self.webhook_headers = self._build_cloudflare_headers(
+            cf_client_id=cloudflare_client_id or settings.cf_access_client_id,
+            cf_client_secret=cloudflare_client_secret or settings.cf_access_client_secret,
+        )
+
+    def _build_api_headers(
+        self,
+        api_key: str | None,
+        cf_client_id: str | None,
+        cf_client_secret: str | None,
+    ) -> dict[str, str]:
+        """Build headers for Portainer API requests."""
+        headers = {"Accept": "application/json"}
+
+        if api_key:
+            headers["X-API-Key"] = api_key
+
+        if cf_client_id and cf_client_secret:
+            headers["CF-Access-Client-ID"] = cf_client_id
+            headers["CF-Access-Client-Secret"] = cf_client_secret
+
+        return headers
+
+    def _build_cloudflare_headers(
+        self,
+        cf_client_id: str | None,
+        cf_client_secret: str | None,
+    ) -> dict[str, str]:
+        """Build Cloudflare Access headers for webhook requests."""
+        if cf_client_id and cf_client_secret:
+            return {
+                "CF-Access-Client-ID": cf_client_id,
+                "CF-Access-Client-Secret": cf_client_secret,
+            }
+        return {}
+
+    # =========================================================================
+    # Low-Level API Methods
+    # =========================================================================
+
+    async def fetch_all_stacks(self) -> list[dict[str, Any]]:
+        """Fetch all stacks from Portainer API."""
+        url = f"{self.base_url}/api/stacks"
+        logger.info("Fetching stacks from %s", url)
+
+        async with httpx.AsyncClient(verify=self.verify_ssl, timeout=self.DEFAULT_TIMEOUT) as client:
+            response = await client.get(url, headers=self.api_headers)
+            response.raise_for_status()
+            stacks = response.json()
+
+        logger.info("Fetched %d stacks", len(stacks) if isinstance(stacks, list) else 0)
+        return stacks
+
+    async def fetch_stack(self, stack_id: int) -> dict[str, Any]:
+        """Fetch a single stack by ID."""
+        url = f"{self.base_url}/api/stacks/{stack_id}"
+        logger.info("Fetching stack %d from %s", stack_id, url)
+
+        async with httpx.AsyncClient(verify=self.verify_ssl, timeout=self.DEFAULT_TIMEOUT) as client:
+            response = await client.get(url, headers=self.api_headers)
+            response.raise_for_status()
+            return response.json()
+
+    async def fetch_image_status(self, stack_id: int, refresh: bool = False) -> dict[str, Any]:
+        """Fetch image status indicator for a stack."""
+        url = f"{self.base_url}/api/stacks/{stack_id}/images_status"
+        logger.info("Fetching image status for stack %d (refresh=%s)", stack_id, refresh)
+
+        async with httpx.AsyncClient(verify=self.verify_ssl, timeout=self.DEFAULT_TIMEOUT) as client:
+            response = await client.get(url, headers=self.api_headers, params={"refresh": refresh})
+            response.raise_for_status()
+            return response.json()
+
+    async def call_webhook(self, webhook_url: str) -> bool:
+        """Trigger a webhook URL. Returns True on success."""
+        logger.info("Triggering webhook: %s", webhook_url)
+
+        async with httpx.AsyncClient(
+            verify=self.verify_ssl,
+            timeout=self.DEFAULT_TIMEOUT,
+            follow_redirects=True,
+        ) as client:
             try:
-                infos.append(self._parse_stack(s))
-            except Exception:
-                # Skip malformed entries defensively
-                continue
-        return infos
+                response = await client.post(webhook_url, headers=self.webhook_headers or None)
+                success = 200 <= response.status_code < 300
 
-    async def get_stack_info(self, stack_id: int) -> StackInfo:
-        raw = await self.get_stack(stack_id)
-        return self._parse_stack(raw)
+                if not success:
+                    logger.error("Webhook returned status %d", response.status_code)
 
-    async def list_stacks_with_webhooks(self) -> List[StackInfo]:
-        infos = await self.list_stack_infos()
-        return [s for s in infos if s.has_webhook]
+                return success
 
-    async def trigger_webhook(self, webhook_url: str) -> bool:
-        # Portainer webhooks should NOT include API key headers; include CF headers if configured.
-        self._log.info("POST %s", webhook_url)
-        async with httpx.AsyncClient(verify=self.verify_ssl, timeout=30.0, follow_redirects=True) as client:
-            try:
-                headers = self._cf_headers or None
-                r = await client.post(webhook_url, headers=headers)
-                self._log.debug("Response %s %s", r.status_code, r.text[:500])
-                ok = r.status_code // 100 == 2
-                if not ok:
-                    self._log.error("Webhook call returned %s", r.status_code)
-                return ok
-            except httpx.HTTPError as e:
-                self._log.exception("Webhook call failed: %s", e)
+            except httpx.HTTPError as error:
+                logger.exception("Webhook request failed: %s", error)
                 return False
 
-    async def trigger_stack_webhook(self, stack: StackInfo) -> bool:
+    # =========================================================================
+    # High-Level Methods
+    # =========================================================================
+
+    def build_webhook_url(self, webhook_token: str) -> str:
+        """Build full webhook URL from token."""
+        return f"{self.base_url}/api/stacks/webhooks/{webhook_token}"
+
+    def parse_stack(self, raw_stack: dict[str, Any]) -> StackInfo:
+        """Parse raw Portainer stack data into StackInfo."""
+        # Required field
+        if "Id" not in raw_stack:
+            raise ValueError("Stack data missing required 'Id' field")
+
+        stack_id = int(raw_stack["Id"])
+        name = str(raw_stack.get("Name") or f"stack-{stack_id}")
+
+        # Optional stack type
+        raw_type = raw_stack.get("Type")
+        stack_type = int(raw_type) if raw_type is not None else None
+
+        # Build webhook URL from token if present
+        webhook_token = raw_stack.get("Webhook") or raw_stack.get("webhook")
+        webhook_url = self.build_webhook_url(webhook_token) if webhook_token else None
+
+        return StackInfo(
+            id=stack_id,
+            name=name,
+            stack_type=stack_type,
+            webhook_url=webhook_url,
+            created_at=parse_timestamp(raw_stack.get("CreationDate")),
+            updated_at=parse_timestamp(raw_stack.get("UpdateDate")),
+        )
+
+    async def get_all_stacks(self) -> list[StackInfo]:
+        """Get all stacks as StackInfo objects."""
+        raw_stacks = await self.fetch_all_stacks()
+        stacks = []
+
+        for raw_stack in raw_stacks:
+            try:
+                stacks.append(self.parse_stack(raw_stack))
+            except (ValueError, TypeError) as error:
+                logger.warning("Skipping malformed stack: %s", error)
+                continue
+
+        return stacks
+
+    async def get_stack(self, stack_id: int) -> StackInfo:
+        """Get a single stack as StackInfo."""
+        raw_stack = await self.fetch_stack(stack_id)
+        return self.parse_stack(raw_stack)
+
+    async def get_stacks_with_webhooks(self) -> list[StackInfo]:
+        """Get all stacks that have webhooks configured."""
+        all_stacks = await self.get_all_stacks()
+        return [stack for stack in all_stacks if stack.has_webhook]
+
+    async def trigger_stack_update(self, stack: StackInfo) -> bool:
+        """Trigger a stack update via its webhook. Returns False if no webhook."""
         if not stack.webhook_url:
+            logger.warning("Stack %s has no webhook configured", stack.name)
             return False
-        return await self.trigger_webhook(stack.webhook_url)
+
+        return await self.call_webhook(stack.webhook_url)

@@ -57,13 +57,13 @@ async def indicator_refresh_task():
 async def auto_update_task():
     """
     Periodically run auto-updates for outdated stacks.
-    
+
     This checks for stacks that have auto_update_enabled=True and
     image_status='outdated', then triggers their webhooks.
     """
     log = logging.getLogger(__name__)
-    # Run auto-update check every 5 minutes
-    auto_update_interval = 300
+    # Run auto-update check every 12 hours
+    auto_update_interval = 43200
     log.info("Starting auto-update background task (interval=%ds)", auto_update_interval)
 
     while True:
@@ -92,9 +92,3 @@ async def auto_update_task():
 
         except Exception:
             log.exception("Background auto-update task failed")
-
-
-# Legacy function name for backwards compatibility
-async def status_refresher():
-    """Legacy wrapper - starts the indicator refresh task."""
-    await indicator_refresh_task()

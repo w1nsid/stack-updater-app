@@ -7,8 +7,21 @@
     <title>{% if stack %}Edit Stack{% else %}Add Stack{% endif %}</title>
     <link rel="stylesheet" href="/static/style.css" />
     <script src="https://unpkg.com/lucide@latest" defer></script>
-    <script src="/static/script.js" defer></script>
-    <script>document.addEventListener('DOMContentLoaded', () => { if (window.lucide?.createIcons) lucide.createIcons(); });</script>
+    <script type="module">
+        import { ThemeManager } from '/static/js/modules/theme.js';
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const theme = new ThemeManager();
+            theme.init();
+
+            const themeBtn = document.getElementById('themeToggle');
+            if (themeBtn) {
+                themeBtn.addEventListener('click', () => theme.toggle());
+            }
+
+            if (window.lucide?.createIcons) lucide.createIcons();
+        });
+    </script>
     <style>
         .form-actions {
             display: flex;

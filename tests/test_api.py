@@ -59,7 +59,6 @@ class TestListStacks:
             image_message="All good",
             image_last_checked=now,
             auto_update_enabled=True,
-            is_outdated=False,
         )
         db.add(stack)
         db.commit()
@@ -90,13 +89,23 @@ class TestImportStacks:
         from app.services.portainer_client import StackInfo
 
         mock_client = mock_client_class.return_value
-        mock_client.list_stacks_with_webhooks = AsyncMock(
+        mock_client.get_stacks_with_webhooks = AsyncMock(
             return_value=[
                 StackInfo(
-                    id=1, name="stack-1", type=1, webhook_url="http://test/webhook/1", created_at=None, updated_at=None
+                    id=1,
+                    name="stack-1",
+                    stack_type=1,
+                    webhook_url="http://test/webhook/1",
+                    created_at=None,
+                    updated_at=None
                 ),
                 StackInfo(
-                    id=2, name="stack-2", type=1, webhook_url="http://test/webhook/2", created_at=None, updated_at=None
+                    id=2,
+                    name="stack-2",
+                    stack_type=1,
+                    webhook_url="http://test/webhook/2",
+                    created_at=None,
+                    updated_at=None
                 ),
             ]
         )
@@ -115,7 +124,7 @@ class TestImportStacks:
     ) -> None:
         """Test import handles Portainer API errors - returns 200 with errors list."""
         mock_client = mock_client_class.return_value
-        mock_client.list_stacks_with_webhooks = AsyncMock(side_effect=Exception("Connection failed"))
+        mock_client.get_stacks_with_webhooks = AsyncMock(side_effect=Exception("Connection failed"))
 
         response = client.get("/api/stacks/import")
         # New architecture returns success with 0 imported and errors list
@@ -144,7 +153,7 @@ class TestGetIndicator:
         db.commit()
 
         mock_client = mock_client_class.return_value
-        mock_client.get_stack_image_indicator = AsyncMock(return_value=sample_image_indicator)
+        mock_client.fetch_image_status = AsyncMock(return_value=sample_image_indicator)
 
         response = client.get("/api/stacks/1/indicator")
         assert response.status_code == 200
@@ -168,13 +177,13 @@ class TestGetIndicator:
         db.commit()
 
         mock_client = mock_client_class.return_value
-        mock_client.get_stack_image_indicator = AsyncMock(return_value=sample_image_indicator)
+        mock_client.fetch_image_status = AsyncMock(return_value=sample_image_indicator)
 
         response = client.get("/api/stacks/1/indicator?refresh=true")
         assert response.status_code == 200
 
         # Verify refresh=True was passed
-        mock_client.get_stack_image_indicator.assert_called_once_with(1, refresh=True)
+        mock_client.fetch_image_status.assert_called_once_with(1, refresh=True)
 
 
 class TestTriggerUpdate:
@@ -208,8 +217,8 @@ class TestTriggerUpdate:
         db.commit()
 
         mock_client = mock_client_class.return_value
-        mock_client.trigger_webhook = AsyncMock(return_value=True)
-        mock_client.get_stack_image_indicator = AsyncMock(return_value=sample_image_indicator)
+        mock_client.call_webhook = AsyncMock(return_value=True)
+        mock_client.fetch_image_status = AsyncMock(return_value=sample_image_indicator)
 
         response = client.post("/api/stacks/1/update")
         assert response.status_code == 200
@@ -228,7 +237,7 @@ class TestTriggerUpdate:
         db.commit()
 
         mock_client = mock_client_class.return_value
-        mock_client.trigger_webhook = AsyncMock(return_value=False)
+        mock_client.call_webhook = AsyncMock(return_value=False)
 
         response = client.post("/api/stacks/1/update")
         assert response.status_code == 502

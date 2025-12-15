@@ -748,7 +748,8 @@ td.action-buttons {
     transition: all var(--transition) ease;
 }
 
-.icon.spin {
+.icon.spin,
+.spin {
     animation: spin 1s linear infinite;
 }
 
@@ -1154,4 +1155,54 @@ textarea {
     background: linear-gradient(90deg, var(--panel) 0%, var(--panel-hover) 50%, var(--panel) 100%);
     background-size: 1000px 100%;
     animation: shimmer 2s infinite;
+}
+
+/* 📊 Connection Status Indicator */
+.connection-status {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--unknown);
+    transition: background var(--transition);
+}
+
+.connection-status.connected {
+    background: var(--ok);
+    box-shadow: 0 0 8px var(--ok-glow);
+}
+
+.connection-status.disconnected {
+    background: var(--error);
+    animation: pulse-error 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse-error {
+
+    0%,
+    100% {
+        opacity: 1;
+    }
+
+    50% {
+        opacity: 0.5;
+    }
+}
+
+/* 🎯 Stat Changed Animation */
+.stat-changed {
+    animation: stat-pulse 0.3s ease-out;
+}
+
+@keyframes stat-pulse {
+    0% {
+        transform: scale(1);
+    }
+
+    50% {
+        transform: scale(1.15);
+    }
+
+    100% {
+        transform: scale(1);
+    }
 }

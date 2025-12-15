@@ -35,7 +35,6 @@ class TestStackModel:
         retrieved = db.get(Stack, 1)
         assert retrieved is not None
         assert retrieved.auto_update_enabled is False
-        assert retrieved.is_outdated is False
         assert retrieved.webhook_url is None
         assert retrieved.image_status is None
 
@@ -52,9 +51,7 @@ class TestStackModel:
             image_status="updated",
             image_message="All images up to date",
             image_last_checked=now,
-            last_status_check=now,
             last_updated_at=now,
-            is_outdated=False,
         )
         db.add(stack)
         db.commit()
@@ -64,7 +61,6 @@ class TestStackModel:
         assert retrieved.name == "full-stack"
         assert retrieved.auto_update_enabled is True
         assert retrieved.image_status == "updated"
-        assert retrieved.is_outdated is False
 
     def test_update_stack(self, db: Session) -> None:
         """Test updating a stack."""
@@ -109,10 +105,10 @@ class TestStackModel:
         assert outdated[0].name == "outdated-stack"
 
     def test_query_auto_update_enabled(self, db: Session) -> None:
-        """Test querying stacks with auto-update enabled."""
-        stack1 = Stack(id=1, name="auto-enabled", auto_update_enabled=True, is_outdated=True)
-        stack2 = Stack(id=2, name="auto-disabled", auto_update_enabled=False, is_outdated=True)
-        stack3 = Stack(id=3, name="auto-enabled-fresh", auto_update_enabled=True, is_outdated=False)
+        """Test querying stacks with auto-update enabled and outdated status."""
+        stack1 = Stack(id=1, name="auto-enabled", auto_update_enabled=True, image_status="outdated")
+        stack2 = Stack(id=2, name="auto-disabled", auto_update_enabled=False, image_status="outdated")
+        stack3 = Stack(id=3, name="auto-enabled-fresh", auto_update_enabled=True, image_status="updated")
         db.add_all([stack1, stack2, stack3])
         db.commit()
 
@@ -120,7 +116,7 @@ class TestStackModel:
         needs_update = (
             db.query(Stack).filter(
                 Stack.auto_update_enabled == True,  # noqa: E712
-                Stack.is_outdated == True,  # noqa: E712
+                Stack.image_status == "outdated",
             ).all()
         )
 

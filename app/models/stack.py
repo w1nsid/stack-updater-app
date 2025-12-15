@@ -26,9 +26,7 @@ class Stack(Base):
     image_message: Mapped[str | None] = mapped_column(String(512), nullable=True)
     image_last_checked: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
 
-    last_status_check: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
     last_updated_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
-    is_outdated: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
 
     created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: datetime.now(timezone.utc))
     updated_at: Mapped[datetime] = mapped_column(

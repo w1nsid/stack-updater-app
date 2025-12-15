@@ -1,21 +1,17 @@
 {
-    // VS Code Tasks for running the FastAPI app with uv
+    // VS Code Tasks for Stack Updater App
     "version": "2.0.0",
     "tasks": [
         {
-            "label": "Run app (uv --env-file)",
+            "label": "Run app",
             "type": "shell",
             "command": "uv",
             "args": [
                 "run",
                 "--env-file",
                 ".env",
-                "uvicorn",
-                "app.main:app",
-                "--host",
-                "127.0.0.1",
-                "--port",
-                "8080"
+                "python",
+                "main.py"
             ],
             "group": "none",
             "problemMatcher": [],
@@ -27,64 +23,33 @@
             }
         },
         {
-            "label": "Dev server (uv --env-file --reload)",
+            "label": "uv sync",
             "type": "shell",
             "command": "uv",
             "args": [
-                "run",
-                "--env-file",
-                ".env",
-                "uvicorn",
-                "app.main:app",
-                "--reload",
-                "--host",
-                "127.0.0.1",
-                "--port",
-                "8080"
-            ],
-            "group": "none",
-            "problemMatcher": [],
-            "isBackground": true,
-            "presentation": {
-                "reveal": "always",
-                "panel": "dedicated",
-                "clear": false
-            }
-        },
-        {
-            "label": "Dev server (uv --reload)",
-            "type": "shell",
-            "command": "uv",
-            "args": [
-                "run",
-                "uvicorn",
-                "app.main:app",
-                "--reload",
-                "--host",
-                "127.0.0.1",
-                "--port",
-                "8080"
-            ],
-            "group": "none",
-            "problemMatcher": [],
-            "isBackground": true,
-            "presentation": {
-                "reveal": "always",
-                "panel": "dedicated",
-                "clear": false
-            }
-        },
-        {
-            "label": "uv sync (.venv)",
-            "type": "shell",
-            "command": "uv",
-            "args": [
-                "sync"
+                "sync",
+                "--extra",
+                "dev"
             ],
             "group": "build",
-            "problemMatcher": [
-                "$eslint-stylish"
+            "problemMatcher": [],
+            "presentation": {
+                "reveal": "always",
+                "panel": "shared"
+            }
+        },
+        {
+            "label": "Run tests",
+            "type": "shell",
+            "command": "uv",
+            "args": [
+                "run",
+                "pytest",
+                "tests/",
+                "-v"
             ],
+            "group": "test",
+            "problemMatcher": [],
             "presentation": {
                 "reveal": "always",
                 "panel": "shared"
