@@ -3,7 +3,7 @@ from __future__ import annotations
 import asyncio
 import json
 import logging
-from typing import Any, Dict, Iterable
+from typing import Any, Dict, Iterable, List
 
 from fastapi import WebSocket
 from fastapi.websockets import WebSocketDisconnect
@@ -12,6 +12,7 @@ __all__ = [
     "manager",
     "ConnectionManager",
     "broadcast_stack_update",
+    "broadcast_stacks_update",
     "broadcast_staleness",
     "broadcast_staleness_payload",
 ]
@@ -60,20 +61,44 @@ manager = ConnectionManager()
 
 
 def stack_payload(row: Any) -> Dict[str, Any]:
-    # Row has attributes from models.Stack
+    """Convert a stack row or dict to a WebSocket payload."""
+    # Handle both ORM models and dicts (from StackDTO.to_dict())
+    if isinstance(row, dict):
+        return {
+            "id": row.get("id"),
+            "name": row.get("name"),
+            "webhook_url": row.get("webhook_url"),
+            "image_status": row.get("image_status"),
+            "image_message": row.get("image_message"),
+            "image_last_checked": row.get("image_last_checked"),
+            "auto_update_enabled": row.get("auto_update_enabled"),
+            "last_updated_at": row.get("last_updated_at"),
+            "portainer_created_at": row.get("portainer_created_at"),
+            "portainer_updated_at": row.get("portainer_updated_at"),
+        }
+    # Row is ORM model with attributes
     return {
         "id": row.id,
         "name": getattr(row, "name", None),
+        "webhook_url": getattr(row, "webhook_url", None),
         "image_status": getattr(row, "image_status", None),
         "image_message": getattr(row, "image_message", None),
         "image_last_checked": getattr(row, "image_last_checked", None),
+        "auto_update_enabled": getattr(row, "auto_update_enabled", None),
         "last_updated_at": getattr(row, "last_updated_at", None),
-        "is_outdated": getattr(row, "is_outdated", None),
+        "portainer_created_at": getattr(row, "portainer_created_at", None),
+        "portainer_updated_at": getattr(row, "portainer_updated_at", None),
     }
 
 
 async def broadcast_stack_update(row: Any) -> None:
-    await manager.broadcast_json({"type": "stack", "payload": stack_payload(row)})
+    """Broadcast a single stack update to all connected clients."""
+    await manager.broadcast_json({"type": "stack_update", "payload": stack_payload(row)})
+
+
+async def broadcast_stacks_update(stacks: List[Dict[str, Any]]) -> None:
+    """Broadcast a full list of stacks to all connected clients (for sync/refresh-all)."""
+    await manager.broadcast_json({"type": "stacks_sync", "payload": stacks})
 
 
 async def broadcast_staleness(rows: Iterable[Any]) -> None:

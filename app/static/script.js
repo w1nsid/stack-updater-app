@@ -208,28 +208,58 @@
 
     function initWebSocket() {
         const proto = location.protocol === 'https:' ? 'wss' : 'ws';
-        const ws = new WebSocket(`${proto}://${location.host}/ws`);
-        ws.onmessage = (ev) => {
-            try {
-                const msg = JSON.parse(ev.data);
-                if (msg.type === 'stack') {
-                    const p = msg.payload;
-                    updateLocalStack(p.id, p);
-                    // Update only the specific row instead of re-rendering entire table
-                    updateStackRow(p);
-                    updateStats(stacks);
-                    announce(`Updated stack ${p.name || p.id}`);
-                } else if (msg.type === 'staleness') {
-                    // Don't re-render table for staleness updates
-                    // Just update the local data silently
-                    for (const r of msg.payload) {
-                        updateLocalStack(r.id, { is_outdated: r.is_outdated });
+        let ws = null;
+        let reconnectTimeout = null;
+
+        function connect() {
+            ws = new WebSocket(`${proto}://${location.host}/ws`);
+
+            ws.onmessage = (ev) => {
+                try {
+                    const msg = JSON.parse(ev.data);
+
+                    if (msg.type === 'stack_update') {
+                        // Single stack update
+                        const p = msg.payload;
+                        updateLocalStack(p.id, p);
+                        updateStackRow(p);
+                        updateStats(stacks);
+                    } else if (msg.type === 'stacks_sync') {
+                        // Full sync - replace entire stacks array
+                        stacks = msg.payload;
+                        renderTable();
+                        announce('Stacks synced');
+                    } else if (msg.type === 'staleness') {
+                        // Legacy staleness updates - just update local data
+                        for (const r of msg.payload) {
+                            updateLocalStack(r.id, { is_outdated: r.is_outdated });
+                        }
                     }
+                } catch (err) {
+                    console.error('WebSocket message parse error:', err);
                 }
-            } catch { }
-        };
-        ws.onopen = () => announce('Realtime connected');
-        ws.onclose = () => announce('Realtime disconnected');
+            };
+
+            ws.onopen = () => {
+                announce('Realtime connected');
+                if (reconnectTimeout) {
+                    clearTimeout(reconnectTimeout);
+                    reconnectTimeout = null;
+                }
+            };
+
+            ws.onclose = () => {
+                announce('Realtime disconnected');
+                // Attempt to reconnect after 3 seconds
+                reconnectTimeout = setTimeout(connect, 3000);
+            };
+
+            ws.onerror = (err) => {
+                console.error('WebSocket error:', err);
+            };
+        }
+
+        connect();
     }
 
     function updateStackRow(stackData) {
@@ -267,17 +297,48 @@
         const importBtn = document.getElementById('importBtn');
         if (importBtn) importBtn.addEventListener('click', async () => {
             const original = importBtn.innerHTML;
-            importBtn.disabled = true; importBtn.innerHTML = '<i data-lucide="download"></i><span>Importing...</span>';
+            importBtn.disabled = true;
+            importBtn.innerHTML = '<i data-lucide="loader-circle" class="spin"></i><span>Importing...</span>';
             if (window.lucide?.createIcons) lucide.createIcons();
-            try { await fetch('/api/stacks/import'); announce('Import completed'); } finally { importBtn.disabled = false; importBtn.innerHTML = original; if (window.lucide?.createIcons) lucide.createIcons(); }
-            fetchStacks();
+
+            try {
+                const res = await fetch('/api/stacks/import');
+                const data = await res.json();
+                announce(`Import completed: ${data.imported} new stacks`);
+                // Fetch fresh data
+                await fetchStacks();
+            } catch (err) {
+                announce('Import failed');
+            } finally {
+                importBtn.disabled = false;
+                importBtn.innerHTML = original;
+                if (window.lucide?.createIcons) lucide.createIcons();
+            }
         });
         const refreshAllBtn = document.getElementById('refreshAllBtn');
         if (refreshAllBtn) refreshAllBtn.addEventListener('click', async () => {
-            for (const s of stacks) {
-                try { const r = await getIndicator(s.id, true); updateLocalStack(r.id, { image_status: r.status, image_last_checked: r.last_checked }); } catch { }
+            const original = refreshAllBtn.innerHTML;
+            refreshAllBtn.disabled = true;
+            refreshAllBtn.innerHTML = '<i data-lucide="loader-circle" class="spin"></i><span>Refreshing...</span>';
+            if (window.lucide?.createIcons) lucide.createIcons();
+
+            try {
+                // Use the bulk refresh endpoint
+                const res = await fetch('/api/stacks/refresh-all?force=true', { method: 'POST' });
+                if (res.ok) {
+                    // Fetch fresh data
+                    await fetchStacks();
+                    announce('Bulk refresh complete');
+                } else {
+                    announce('Bulk refresh failed');
+                }
+            } catch (err) {
+                announce('Bulk refresh failed');
+            } finally {
+                refreshAllBtn.disabled = false;
+                refreshAllBtn.innerHTML = original;
+                if (window.lucide?.createIcons) lucide.createIcons();
             }
-            renderTable(); announce('Bulk refresh complete');
         });
 
         document.getElementById('stackTableBody')?.addEventListener('click', onTableClick);

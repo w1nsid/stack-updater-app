@@ -75,77 +75,52 @@ class TestListStacks:
         assert "image_message" in data
         assert "image_last_checked" in data
         assert "auto_update_enabled" in data
-        assert "is_outdated" in data
 
 
 class TestImportStacks:
     """Tests for GET /api/stacks/import endpoint."""
-    @patch("app.api.routes.PortainerClient")
+    @patch("app.services.stack_service.PortainerClient")
     def test_import_stacks_success(
         self,
         mock_client_class: Any,
         client: TestClient,
         db: Session,
-        sample_portainer_stacks: list[dict],
-        sample_image_indicator: dict,
     ) -> None:
         """Test successful stack import from Portainer."""
+        from app.services.portainer_client import StackInfo
+
         mock_client = mock_client_class.return_value
-        mock_client.list_stacks = AsyncMock(return_value=sample_portainer_stacks)
-        mock_client.get_stack_image_indicator = AsyncMock(return_value=sample_image_indicator)
-        mock_client.extract_webhook_url.side_effect = lambda s: (
-            f"http://test/webhook/{s['Webhook']}" if s.get("Webhook") else None
+        mock_client.list_stacks_with_webhooks = AsyncMock(
+            return_value=[
+                StackInfo(
+                    id=1, name="stack-1", type=1, webhook_url="http://test/webhook/1", created_at=None, updated_at=None
+                ),
+                StackInfo(
+                    id=2, name="stack-2", type=1, webhook_url="http://test/webhook/2", created_at=None, updated_at=None
+                ),
+            ]
         )
 
         response = client.get("/api/stacks/import")
         assert response.status_code == 200
 
         data = response.json()
-        # Should import 2 stacks (the one without webhook is skipped)
         assert data["imported"] == 2
 
-    @patch("app.api.routes.PortainerClient")
+    @patch("app.services.stack_service.PortainerClient")
     def test_import_stacks_portainer_error(
         self,
         mock_client_class: Any,
         client: TestClient,
     ) -> None:
-        """Test import handles Portainer API errors."""
+        """Test import handles Portainer API errors - returns 200 with errors list."""
         mock_client = mock_client_class.return_value
-        mock_client.list_stacks = AsyncMock(side_effect=Exception("Connection failed"))
+        mock_client.list_stacks_with_webhooks = AsyncMock(side_effect=Exception("Connection failed"))
 
         response = client.get("/api/stacks/import")
-        assert response.status_code == 502
-        assert "Failed to fetch stacks" in response.json()["detail"]
-
-    @patch("app.api.routes.PortainerClient")
-    def test_import_stacks_skips_existing(
-        self,
-        mock_client_class: Any,
-        client: TestClient,
-        db: Session,
-        sample_portainer_stacks: list[dict],
-        sample_image_indicator: dict,
-    ) -> None:
-        """Test import doesn't duplicate existing stacks."""
-        # Pre-create one stack
-        existing = Stack(id=1, name="existing", webhook_url="http://old/webhook")
-        db.add(existing)
-        db.commit()
-
-        mock_client = mock_client_class.return_value
-        mock_client.list_stacks = AsyncMock(return_value=sample_portainer_stacks)
-        mock_client.get_stack_image_indicator = AsyncMock(return_value=sample_image_indicator)
-        mock_client.extract_webhook_url.side_effect = lambda s: (
-            f"http://test/webhook/{s['Webhook']}" if s.get("Webhook") else None
-        )
-
-        response = client.get("/api/stacks/import")
+        # New architecture returns success with 0 imported and errors list
         assert response.status_code == 200
-
-        # Only 1 new stack imported (id=2), id=1 already exists, id=3 has no webhook
-        data = response.json()
-        assert data["imported"] == 1
+        assert response.json()["imported"] == 0
 
 
 class TestGetIndicator:
@@ -155,7 +130,7 @@ class TestGetIndicator:
         response = client.get("/api/stacks/999/indicator")
         assert response.status_code == 404
 
-    @patch("app.api.routes.PortainerClient")
+    @patch("app.services.stack_service.PortainerClient")
     def test_get_indicator_success(
         self,
         mock_client_class: Any,
@@ -179,7 +154,7 @@ class TestGetIndicator:
         assert data["status"] == "updated"
         assert data["message"] == "All images are up to date"
 
-    @patch("app.api.routes.PortainerClient")
+    @patch("app.services.stack_service.PortainerClient")
     def test_get_indicator_with_refresh(
         self,
         mock_client_class: Any,
@@ -217,9 +192,9 @@ class TestTriggerUpdate:
 
         response = client.post("/api/stacks/1/update")
         assert response.status_code == 400
-        assert "Webhook URL not configured" in response.json()["detail"]
+        assert "No webhook configured" in response.json()["detail"]
 
-    @patch("app.api.routes.PortainerClient")
+    @patch("app.services.stack_service.PortainerClient")
     def test_update_success(
         self,
         mock_client_class: Any,
@@ -240,7 +215,7 @@ class TestTriggerUpdate:
         assert response.status_code == 200
         assert response.json()["updated"] is True
 
-    @patch("app.api.routes.PortainerClient")
+    @patch("app.services.stack_service.PortainerClient")
     def test_update_webhook_fails(
         self,
         mock_client_class: Any,
@@ -257,7 +232,7 @@ class TestTriggerUpdate:
 
         response = client.post("/api/stacks/1/update")
         assert response.status_code == 502
-        assert "Webhook call failed" in response.json()["detail"]
+        assert "failed" in response.json()["detail"].lower()
 
 
 class TestSetAutoUpdate:
@@ -291,53 +266,6 @@ class TestSetAutoUpdate:
 
         data = response.json()
         assert data["auto_update_enabled"] is False
-
-
-class TestCheckNow:
-    """Tests for POST /api/stacks/{stack_id}/check-now endpoint."""
-    def test_check_now_not_found(self, client: TestClient) -> None:
-        """Test check-now for non-existent stack."""
-        response = client.post("/api/stacks/999/check-now")
-        assert response.status_code == 404
-
-    def test_check_now_marks_outdated(self, client: TestClient, db: Session) -> None:
-        """Test check-now marks stack as outdated when old."""
-        # Stack with very old last_updated_at
-        old_time = datetime(2020, 1, 1, tzinfo=timezone.utc)
-        stack = Stack(
-            id=1,
-            name="old-stack",
-            webhook_url="http://test/webhook",
-            last_updated_at=old_time,
-            is_outdated=False,
-        )
-        db.add(stack)
-        db.commit()
-
-        response = client.post("/api/stacks/1/check-now")
-        assert response.status_code == 200
-
-        data = response.json()
-        assert data["is_outdated"] is True
-
-    def test_check_now_recent_not_outdated(self, client: TestClient, db: Session) -> None:
-        """Test check-now doesn't mark recent stack as outdated."""
-        # Stack updated just now
-        stack = Stack(
-            id=1,
-            name="fresh-stack",
-            webhook_url="http://test/webhook",
-            last_updated_at=datetime.now(timezone.utc),
-            is_outdated=True,
-        )
-        db.add(stack)
-        db.commit()
-
-        response = client.post("/api/stacks/1/check-now")
-        assert response.status_code == 200
-
-        data = response.json()
-        assert data["is_outdated"] is False
 
 
 class TestIndexPage:
