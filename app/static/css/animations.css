@@ -185,22 +185,3 @@ button.loading,
     pointer-events: none;
     opacity: 0.8;
 }
-
-/* Connection status */
-.connection-status {
-    width: 8px;
-    height: 8px;
-    border-radius: 50%;
-    background: var(--unknown);
-    transition: background var(--transition);
-}
-
-.connection-status.connected {
-    background: var(--ok);
-    box-shadow: 0 0 8px var(--ok-glow);
-}
-
-.connection-status.disconnected {
-    background: var(--error);
-    animation: pulse-error 1.5s ease-in-out infinite;
-}

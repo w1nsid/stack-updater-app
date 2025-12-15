@@ -98,10 +98,15 @@ class StackUpdaterApp {
         });
 
         // Table row actions (delegated)
-        const tbody = document.getElementById('stackTableBody');
-        if (tbody) {
-            tbody.addEventListener('click', (e) => this.handleTableClick(e));
-        }
+        const actionButtonTargets = [
+            document.getElementById('stackTableBody'),
+            document.getElementById('rowActionPanel')
+        ];
+        actionButtonTargets.forEach(target => {
+            if (target) {
+                target.addEventListener('click', (e) => this.handleActionButtonClick(e));
+            }
+        });
     }
 
     /**
@@ -141,7 +146,7 @@ class StackUpdaterApp {
     /**
      * Handle table row button clicks
      */
-    handleTableClick(event) {
+    handleActionButtonClick(event) {
         const btn = event.target.closest('button[data-action]');
         if (!btn) return;
 
@@ -155,7 +160,7 @@ class StackUpdaterApp {
      * Handle stack actions (check, update)
      */
     async handleAction(action, stackId, buttonEl) {
-        const row = buttonEl?.closest('tr');
+        const row = buttonEl?.closest('tr') || this.table.getRowElement(stackId);
         const indicatorCell = row?.querySelector('[data-col="indicator"]');
 
         // Disable button and add spin animation

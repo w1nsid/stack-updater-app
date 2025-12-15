@@ -41,7 +41,7 @@ export class ButtonController {
                 icon.setAttribute('data-lucide', 'loader-2');
             }
 
-            const textSpan = button.querySelector('span');
+            const textSpan = button.querySelector('.btn-text') || button.querySelector('span');
             if (textSpan && loadingText) {
                 textSpan.textContent = loadingText;
             }

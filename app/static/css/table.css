@@ -3,11 +3,23 @@
    ========================================================================== */
 
 .table-wrapper {
+    --action-panel-width: clamp(12rem, 28%, 18rem);
+    position: relative;
     border-radius: var(--radius);
-    overflow: hidden;
-    border: 1px solid var(--border);
+    border: 0.07rem solid var(--border);
     background: var(--panel-2);
     box-shadow: var(--shadow-sm);
+    overflow: visible;
+}
+
+.table-shell {
+    border-radius: inherit;
+    overflow: hidden;
+    transition: margin-right var(--transition) ease;
+}
+
+.table-wrapper.actions-visible .table-shell {
+    margin-right: var(--action-panel-width);
 }
 
 table {
@@ -24,39 +36,30 @@ thead {
 }
 
 thead th {
-    text-align: left;
+    text-align: center;
     font-weight: 600;
-    font-size: 13px;
+    font-size: 0.82rem;
     color: var(--muted);
     padding: var(--space-4);
-    border-bottom: 2px solid var(--border);
+    border-bottom: 0.12rem solid var(--border);
     text-transform: uppercase;
-    letter-spacing: 0.5px;
+    letter-spacing: 0.03rem;
     cursor: pointer;
-    transition: all var(--transition-fast) ease;
+    transition: color var(--transition-fast) ease, background var(--transition-fast) ease;
     user-select: none;
 }
 
-/* Name column - auto width (takes remaining space) */
 thead th:first-child {
-    width: auto;
+    width: clamp(14rem, 32%, 22rem);
 }
 
-/* Status column */
 thead th:nth-child(2) {
-    width: 130px;
+    width: 8.5rem;
 }
 
-/* Date columns */
 thead th:nth-child(3),
 thead th:nth-child(4) {
-    width: 130px;
-}
-
-/* Actions column */
-thead th:last-child {
-    width: 180px;
-    text-align: right;
+    width: 8.5rem;
 }
 
 thead th:hover {
@@ -65,43 +68,27 @@ thead th:hover {
 }
 
 tbody td {
-    padding: var(--space-3) var(--space-4);
-    border-bottom: 1px solid var(--border);
+    padding: var(--space-4);
+    border-bottom: 0.07rem solid var(--border);
     vertical-align: middle;
-    font-size: 14px;
+    font-size: 0.95rem;
     transition: background var(--transition-fast) ease;
-}
-
-tbody td[data-col="indicator"] {
     text-align: center;
 }
 
 tbody tr {
-    transition: all var(--transition) ease;
+    transition: background var(--transition) ease;
     animation: fadeInRow 0.3s ease-out backwards;
 }
 
-tbody tr:nth-child(1) {
-    animation-delay: 0.05s;
-}
+tbody tr:nth-child(1) { animation-delay: 0.05s; }
+tbody tr:nth-child(2) { animation-delay: 0.1s; }
+tbody tr:nth-child(3) { animation-delay: 0.15s; }
+tbody tr:nth-child(4) { animation-delay: 0.2s; }
+tbody tr:nth-child(5) { animation-delay: 0.25s; }
 
-tbody tr:nth-child(2) {
-    animation-delay: 0.1s;
-}
-
-tbody tr:nth-child(3) {
-    animation-delay: 0.15s;
-}
-
-tbody tr:nth-child(4) {
-    animation-delay: 0.2s;
-}
-
-tbody tr:nth-child(5) {
-    animation-delay: 0.25s;
-}
-
-tbody tr:hover {
+tbody tr:hover,
+tbody tr:focus-within {
     background: var(--panel-hover);
 }
 
@@ -117,22 +104,32 @@ tbody tr:last-child td {
 .cell-name-inner {
     display: inline-flex;
     align-items: center;
+    justify-content: center;
     gap: var(--space-3);
+    max-width: 100%;
+}
+
+.stack-name {
+    display: inline-block;
+    max-width: 24ch;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .cell-name .icon-stack,
 .cell-name-inner .icon-stack {
-    width: 20px;
-    height: 20px;
+    width: 1.25rem;
+    height: 1.25rem;
     color: var(--muted);
-    transition: all var(--transition) ease;
+    transition: transform var(--transition) ease, color var(--transition) ease;
     flex-shrink: 0;
 }
 
 tbody tr:hover .cell-name .icon-stack,
 tbody tr:hover .cell-name-inner .icon-stack {
     color: var(--primary);
-    transform: scale(1.1) rotate(5deg);
+    transform: scale(1.15) rotate(5deg);
 }
 
 .cell-status {
@@ -141,39 +138,7 @@ tbody tr:hover .cell-name-inner .icon-stack {
 
 .cell-date {
     color: var(--text-secondary);
-    font-size: 13px;
-}
-
-.cell-actions {
-    white-space: nowrap;
-    text-align: right;
-}
-
-/* Action buttons group */
-.action-group {
-    display: inline-flex;
-    gap: var(--space-2);
-    align-items: center;
-}
-
-/* Small button variant for table actions */
-.btn-sm {
-    height: 28px;
-    padding: 4px 10px;
-    font-size: 12px;
-    gap: 4px;
-    white-space: nowrap;
-}
-
-.btn-sm i,
-.btn-sm svg {
-    width: 14px;
-    height: 14px;
-    flex-shrink: 0;
-}
-
-.btn-label {
-    font-weight: 500;
+    font-size: 0.85rem;
 }
 
 /* Empty state */
@@ -191,37 +156,76 @@ tbody tr:hover .cell-name-inner .icon-stack {
 }
 
 .empty-icon {
-    width: 48px;
-    height: 48px;
+    width: 3rem;
+    height: 3rem;
     opacity: 0.5;
     margin-bottom: var(--space-2);
 }
 
 .empty-hint {
-    font-size: 13px;
+    font-size: 0.85rem;
     opacity: 0.7;
 }
 
-/* Legacy support */
-td.name {
+/* ==========================================================================
+   Row Action Slider
+   ========================================================================== */
+
+.row-action-panel {
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    width: var(--action-panel-width);
+    background: var(--panel);
+    border-left: 0.07rem solid var(--border);
+    box-shadow: -0.5rem 0 1.5rem rgba(9, 10, 20, 0.4);
+    transform: translateX(110%);
+    transition: transform var(--transition) ease, opacity var(--transition) ease;
+    opacity: 0;
+    pointer-events: none;
     display: flex;
     align-items: center;
-    gap: var(--space-3);
-    font-weight: 600;
+    justify-content: center;
+    padding: 1.5rem;
+    z-index: 5;
 }
 
-td.name i.muted {
-    width: 20px;
-    height: 20px;
+.row-action-panel::before {
+    content: '';
+    position: absolute;
+    inset: 0.4rem;
+    border-radius: var(--radius);
+    background: radial-gradient(circle at 30% 20%, rgba(255, 255, 255, 0.04), transparent);
+    pointer-events: none;
+}
+
+.row-action-panel.visible {
+    transform: translateX(0);
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.row-action-content {
+    position: relative;
+    z-index: 1;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.row-action-label {
+    text-transform: uppercase;
+    font-size: 0.7rem;
+    letter-spacing: 0.12rem;
     color: var(--muted);
-    transition: all var(--transition) ease;
 }
 
-tbody tr:hover td.name i.muted {
-    color: var(--primary);
-    transform: scale(1.1) rotate(5deg);
-}
-
-td.action-buttons {
-    white-space: nowrap;
+.row-action-name {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--text);
+    margin-bottom: 0.5rem;
+    line-height: 1.2;
 }

@@ -72,11 +72,19 @@ export class ThemeManager {
      * Update the theme toggle button icon
      */
     updateIcon() {
-        const icon = document.querySelector('#themeToggle i');
-        if (icon) {
-            icon.setAttribute('data-lucide', this.currentTheme === 'dark' ? 'sun' : 'moon');
-            refreshIcons();
+        const toggle = document.getElementById('themeToggle');
+        if (!toggle) {
+            return;
         }
+
+        const nextTheme = this.currentTheme === 'dark' ? 'light' : 'dark';
+        toggle.dataset.themeState = this.currentTheme;
+        toggle.setAttribute('role', 'switch');
+        toggle.setAttribute('aria-checked', String(this.currentTheme === 'light'));
+        toggle.setAttribute('aria-label', `Switch to ${nextTheme} mode`);
+        toggle.setAttribute('title', `Switch to ${nextTheme} mode`);
+
+        refreshIcons();
     }
 
     /**

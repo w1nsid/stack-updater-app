@@ -19,10 +19,30 @@
             <span>Stack Updater</span>
         </div>
         <div class="header-actions">
-            <button id="importBtn" class="ghost"><i data-lucide="download"></i><span>Import</span></button>
-            <button id="refreshAllBtn" class="ghost"><i data-lucide="rotate-cw"></i><span>Refresh All</span></button>
-            <button id="themeToggle" class="icon-btn" title="Toggle theme" aria-label="Toggle theme">
-                <i data-lucide="moon"></i>
+            <button id="importBtn" class="ghost header-btn">
+                <span class="btn-content">
+                    <i data-lucide="download"></i>
+                    <span class="btn-text">Import</span>
+                </span>
+                <span class="btn-spinner" aria-hidden="true"></span>
+            </button>
+            <button id="refreshAllBtn" class="ghost header-btn">
+                <span class="btn-content">
+                    <i data-lucide="rotate-cw"></i>
+                    <span class="btn-text">Refresh All</span>
+                </span>
+                <span class="btn-spinner" aria-hidden="true"></span>
+            </button>
+            <button id="themeToggle" class="theme-switch" role="switch" aria-checked="false"
+                aria-label="Toggle theme" title="Toggle theme">
+                <span class="switch-track">
+                    <span class="switch-icons">
+                        <i data-lucide="moon" class="switch-icon switch-icon--moon"></i>
+                        <i data-lucide="sun" class="switch-icon switch-icon--sun"></i>
+                    </span>
+                    <span class="switch-thumb" aria-hidden="true"></span>
+                </span>
+                <span class="sr-only">Toggle theme</span>
             </button>
         </div>
     </header>
@@ -74,7 +94,7 @@
         <!-- Main Dashboard Card -->
         <div class="card">
             <h1>Dashboard</h1>
-            <div class="toolbar" style="display:flex;flex-wrap:wrap;gap:12px;margin-bottom:16px;align-items:center;">
+            <div class="toolbar" style="display:flex;flex-wrap:wrap;gap:0.75rem;margin-bottom:1rem;align-items:center;">
                 <label class="sr-only" for="filterSearch">Search stacks</label>
                 <input id="filterSearch" type="text" placeholder="🔍 Search by name..." aria-label="Search stacks"
                     style="flex:1;min-width:200px;" />
@@ -89,19 +109,27 @@
                 </select>
             </div>
             <div class="table-wrapper">
-                <table aria-describedby="aria-live-region">
-                    <thead>
-                        <tr>
-                            <th data-key="name" scope="col">Name</th>
-                            <th data-key="image_status" scope="col">Image Status</th>
-                            <th data-key="image_last_checked" scope="col">Last Checked</th>
-                            <th data-key="last_updated_at" scope="col">Last Updated</th>
-                            <th scope="col">Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody id="stackTableBody">
-                    </tbody>
-                </table>
+                <div class="table-shell">
+                    <table aria-describedby="aria-live-region">
+                        <thead>
+                            <tr>
+                                <th data-key="name" scope="col">Name</th>
+                                <th data-key="image_status" scope="col">Image Status</th>
+                                <th data-key="image_last_checked" scope="col">Last Checked</th>
+                                <th data-key="last_updated_at" scope="col">Last Updated</th>
+                            </tr>
+                        </thead>
+                        <tbody id="stackTableBody">
+                        </tbody>
+                    </table>
+                </div>
+                <aside class="row-action-panel" id="rowActionPanel" aria-hidden="true">
+                    <div class="row-action-content">
+                        <p class="row-action-label">Actions for</p>
+                        <p class="row-action-name" data-role="action-name">—</p>
+                        <div class="row-action-buttons" data-role="action-buttons"></div>
+                    </div>
+                </aside>
             </div>
         </div>
     </div>
