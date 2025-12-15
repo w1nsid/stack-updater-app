@@ -28,10 +28,9 @@ export class ButtonController {
             button.classList.add('loading');
 
             // Set loading content with spinner
-            const icon = button.querySelector('i');
+            const icon = button.querySelector('i, svg');
             if (icon) {
                 icon.setAttribute('data-lucide', 'loader-2');
-                icon.classList.add('icon', 'spin');
             }
 
             const textSpan = button.querySelector('span');
@@ -39,7 +38,14 @@ export class ButtonController {
                 textSpan.textContent = loadingText;
             }
 
+            // Refresh icons first to convert to SVG, then add spin class
             this.refreshIcons();
+
+            // Add spin class to the newly created SVG
+            const svgIcon = button.querySelector('svg');
+            if (svgIcon) {
+                svgIcon.classList.add('icon', 'spin');
+            }
 
             await action();
 
