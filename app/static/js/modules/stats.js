@@ -4,6 +4,8 @@
  * Updates the statistics cards in the dashboard.
  */
 
+import { getStatusClass } from './utils.js';
+
 export class StatsRenderer {
     constructor() {
         this.elements = {
@@ -35,9 +37,9 @@ export class StatsRenderer {
     calculate(stacks) {
         return {
             total: stacks.length,
-            updated: stacks.filter(s => this.getStatusClass(s.image_status) === 'ok').length,
-            outdated: stacks.filter(s => this.getStatusClass(s.image_status) === 'warn').length,
-            errors: stacks.filter(s => this.getStatusClass(s.image_status) === 'error').length
+            updated: stacks.filter(s => getStatusClass(s.image_status) === 'ok').length,
+            outdated: stacks.filter(s => getStatusClass(s.image_status) === 'warn').length,
+            errors: stacks.filter(s => getStatusClass(s.image_status) === 'error').length
         };
     }
 
@@ -61,26 +63,5 @@ export class StatsRenderer {
                 el.classList.remove('stat-changed');
             }, 300);
         }
-    }
-
-    /**
-     * Get status class from status string
-     * @param {string} status 
-     * @returns {string}
-     */
-    getStatusClass(status) {
-        if (!status) return 'unknown';
-
-        const normalized = status.toString().trim().toLowerCase();
-        const mapping = {
-            'processing': 'processing',
-            'preparing': 'processing',
-            'updated': 'ok',
-            'outdated': 'warn',
-            'skipped': 'unknown',
-            'error': 'error'
-        };
-
-        return mapping[normalized] || 'unknown';
     }
 }

@@ -7,6 +7,8 @@
  * - Smooth transitions
  */
 
+import { refreshIcons } from './utils.js';
+
 const STORAGE_KEY = 'stackUpdaterTheme';
 
 export class ThemeManager {
@@ -73,9 +75,7 @@ export class ThemeManager {
         const icon = document.querySelector('#themeToggle i');
         if (icon) {
             icon.setAttribute('data-lucide', this.currentTheme === 'dark' ? 'sun' : 'moon');
-            if (window.lucide?.createIcons) {
-                lucide.createIcons();
-            }
+            refreshIcons();
         }
     }
 

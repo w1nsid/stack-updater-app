@@ -4,6 +4,8 @@
  * Manages button loading states and interactions.
  */
 
+import { refreshIcons } from './utils.js';
+
 export class ButtonController {
     constructor(api, store, announcer) {
         this.announcer = announcer;
@@ -39,7 +41,7 @@ export class ButtonController {
             }
 
             // Refresh icons first to convert to SVG, then add spin class
-            this.refreshIcons();
+            refreshIcons();
 
             // Add spin class to the newly created SVG
             const svgIcon = button.querySelector('svg');
@@ -57,17 +59,8 @@ export class ButtonController {
             button.disabled = originalDisabled;
             button.classList.remove('loading');
             button.innerHTML = originalContent;
-            this.refreshIcons();
+            refreshIcons();
             this.loadingButtons.delete(button);
-        }
-    }
-
-    /**
-     * Refresh Lucide icons
-     */
-    refreshIcons() {
-        if (window.lucide?.createIcons) {
-            window.lucide.createIcons();
         }
     }
 }

@@ -5,6 +5,8 @@
  * Handles filtering, sorting, and updates.
  */
 
+import { getStatusClass } from './utils.js';
+
 export class StackStore {
     constructor() {
         this.stacks = [];
@@ -88,7 +90,7 @@ export class StackStore {
                 stack.name.toLowerCase().includes(this.filters.text);
 
             // Status filter
-            const statusClass = this.getStatusClass(stack.image_status);
+            const statusClass = getStatusClass(stack.image_status);
             const matchesStatus = this.filters.status === 'all' ||
                 statusClass === this.filters.status;
 
@@ -118,26 +120,5 @@ export class StackStore {
             if (aVal > bVal) return this.sortDir === 'asc' ? 1 : -1;
             return 0;
         });
-    }
-
-    /**
-     * Get status class from status string
-     * @param {string} status 
-     * @returns {string}
-     */
-    getStatusClass(status) {
-        if (!status) return 'unknown';
-
-        const normalized = status.toString().trim().toLowerCase();
-        const mapping = {
-            'processing': 'processing',
-            'preparing': 'processing',
-            'updated': 'ok',
-            'outdated': 'warn',
-            'skipped': 'unknown',
-            'error': 'error'
-        };
-
-        return mapping[normalized] || 'unknown';
     }
 }

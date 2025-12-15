@@ -4,6 +4,8 @@
  * Handles rendering and updating the stacks table.
  */
 
+import { getStatusClass, getStatusIcon, refreshIcons, escapeHtml, formatDate } from './utils.js';
+
 export class TableRenderer {
     constructor(store, onAction) {
         this.store = store;
@@ -63,23 +65,23 @@ export class TableRenderer {
         tr.innerHTML = `
             <td class="cell-name">
                 <i data-lucide="layers" class="icon-stack"></i>
-                <span class="stack-name">${this.escapeHtml(stack.name)}</span>
+                <span class="stack-name">${escapeHtml(stack.name)}</span>
             </td>
             <td class="cell-status" data-col="indicator">
                 ${this.renderBadge(stack.image_status)}
             </td>
             <td class="cell-date" data-col="lastChecked">
-                ${this.formatDate(stack.image_last_checked)}
+                ${formatDate(stack.image_last_checked)}
             </td>
             <td class="cell-date" data-col="lastUpdated">
-                ${this.formatDate(stack.last_updated_at)}
+                ${formatDate(stack.last_updated_at)}
             </td>
             <td class="cell-actions">
                 <div class="action-group">
                     <button 
                         data-action="check" 
                         data-id="${stack.id}" 
-                        class="btn btn-ghost btn-sm"
+                        class="ghost btn-sm"
                         title="Check for updates"
                         aria-label="Check updates for ${stack.name}"
                     >
@@ -89,7 +91,7 @@ export class TableRenderer {
                     <button 
                         data-action="update" 
                         data-id="${stack.id}" 
-                        class="btn btn-primary btn-sm"
+                        class="primary btn-sm"
                         title="Pull and redeploy"
                         aria-label="Update ${stack.name}"
                     >
@@ -120,13 +122,13 @@ export class TableRenderer {
         // Update last checked
         const lastCheckedCell = row.querySelector('[data-col="lastChecked"]');
         if (lastCheckedCell && stackData.image_last_checked) {
-            lastCheckedCell.textContent = this.formatDate(stackData.image_last_checked);
+            lastCheckedCell.textContent = formatDate(stackData.image_last_checked);
         }
 
         // Update last updated
         const lastUpdatedCell = row.querySelector('[data-col="lastUpdated"]');
         if (lastUpdatedCell && stackData.last_updated_at) {
-            lastUpdatedCell.textContent = this.formatDate(stackData.last_updated_at);
+            lastUpdatedCell.textContent = formatDate(stackData.last_updated_at);
         }
 
         this.refreshIcons();
@@ -138,8 +140,8 @@ export class TableRenderer {
      * @returns {string}
      */
     renderBadge(status) {
-        const statusClass = this.getStatusClass(status);
-        const icon = this.getStatusIcon(statusClass);
+        const statusClass = getStatusClass(status);
+        const icon = getStatusIcon(statusClass);
         const spin = statusClass === 'processing' ? 'spin' : '';
         const label = this.getStatusLabel(status);
 
@@ -149,43 +151,6 @@ export class TableRenderer {
                 <span class="label">${label}</span>
             </span>
         `;
-    }
-
-    /**
-     * Get status class from status string
-     * @param {string} status 
-     * @returns {string}
-     */
-    getStatusClass(status) {
-        if (!status) return 'unknown';
-
-        const normalized = status.toString().trim().toLowerCase();
-        const mapping = {
-            'processing': 'processing',
-            'preparing': 'processing',
-            'updated': 'ok',
-            'outdated': 'warn',
-            'skipped': 'unknown',
-            'error': 'error'
-        };
-
-        return mapping[normalized] || 'unknown';
-    }
-
-    /**
-     * Get icon name for status class
-     * @param {string} statusClass 
-     * @returns {string}
-     */
-    getStatusIcon(statusClass) {
-        const icons = {
-            ok: 'check-circle',
-            warn: 'alert-triangle',
-            error: 'x-circle',
-            processing: 'loader',
-            unknown: 'help-circle'
-        };
-        return icons[statusClass] || 'help-circle';
     }
 
     /**
@@ -199,43 +164,9 @@ export class TableRenderer {
     }
 
     /**
-     * Format a date string for display
-     * @param {string} dateStr 
-     * @returns {string}
-     */
-    formatDate(dateStr) {
-        if (!dateStr) return '—';
-
-        try {
-            const date = new Date(dateStr);
-            return date.toLocaleString(undefined, {
-                month: 'short',
-                day: 'numeric',
-                hour: '2-digit',
-                minute: '2-digit'
-            });
-        } catch {
-            return dateStr;
-        }
-    }
-
-    /**
-     * Escape HTML to prevent XSS
-     * @param {string} str 
-     * @returns {string}
-     */
-    escapeHtml(str) {
-        const div = document.createElement('div');
-        div.textContent = str;
-        return div.innerHTML;
-    }
-
-    /**
      * Refresh Lucide icons
      */
     refreshIcons() {
-        if (window.lucide?.createIcons) {
-            lucide.createIcons();
-        }
+        refreshIcons();
     }
 }

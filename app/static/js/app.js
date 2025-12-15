@@ -12,6 +12,7 @@ import { TableRenderer } from './modules/table.js';
 import { StatsRenderer } from './modules/stats.js';
 import { Announcer } from './modules/accessibility.js';
 import { ButtonController } from './modules/buttons.js';
+import { refreshIcons } from './modules/utils.js';
 
 class StackUpdaterApp {
     constructor() {
@@ -160,7 +161,7 @@ class StackUpdaterApp {
         // Disable button and add spin animation
         if (buttonEl) {
             buttonEl.disabled = true;
-            const icon = buttonEl.querySelector('i');
+            const icon = buttonEl.querySelector('i, svg');
             if (icon) {
                 icon.classList.add('spin');
             }
@@ -170,7 +171,7 @@ class StackUpdaterApp {
             // Show processing state in indicator
             if (indicatorCell) {
                 indicatorCell.innerHTML = this.table.renderBadge('processing');
-                this.refreshIcons();
+                refreshIcons();
             }
 
             let result;
@@ -215,13 +216,13 @@ class StackUpdaterApp {
 
             if (indicatorCell) {
                 indicatorCell.innerHTML = this.table.renderBadge('error');
-                this.refreshIcons();
+                refreshIcons();
             }
 
             // Re-enable button on error
             if (buttonEl) {
                 buttonEl.disabled = false;
-                const icon = buttonEl.querySelector('i');
+                const icon = buttonEl.querySelector('i, svg');
                 if (icon) {
                     icon.classList.remove('spin');
                 }
@@ -253,15 +254,6 @@ class StackUpdaterApp {
             await this.loadStacks();
             this.announcer.announce('Bulk refresh complete');
         });
-    }
-
-    /**
-     * Refresh Lucide icons
-     */
-    refreshIcons() {
-        if (window.lucide?.createIcons) {
-            lucide.createIcons();
-        }
     }
 }
 
