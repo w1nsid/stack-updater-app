@@ -19,7 +19,7 @@ from ..services.stack_service import StackService
 async def indicator_refresh_task():
     """
     Periodically refresh image indicators from Portainer API.
-    
+
     This runs at the configured refresh interval and updates all stacks'
     image status by querying Portainer's image indicator API.
     """

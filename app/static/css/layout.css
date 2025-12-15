@@ -1,0 +1,108 @@
+/* ==========================================================================
+   Layout Components - Header, Container, Cards
+   ========================================================================== */
+
+/* Header */
+.app-header {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: var(--space-4) var(--space-6);
+    background: rgba(20, 24, 36, 0.8);
+    backdrop-filter: blur(20px) saturate(180%);
+    border-bottom: 1px solid var(--border);
+    box-shadow: var(--shadow-sm);
+    animation: slideDown 0.4s ease-out;
+}
+
+[data-theme="light"] .app-header {
+    background: rgba(255, 255, 255, 0.85);
+}
+
+.brand {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    font-weight: 700;
+    font-size: 18px;
+    letter-spacing: 0.5px;
+    transition: transform var(--transition) ease;
+}
+
+.brand:hover {
+    transform: scale(1.05);
+}
+
+.brand i {
+    width: 26px;
+    height: 26px;
+    color: var(--primary);
+    filter: drop-shadow(0 0 8px var(--primary-glow));
+    animation: float 3s ease-in-out infinite;
+}
+
+.header-actions {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+}
+
+/* Container */
+.container {
+    max-width: 1200px;
+    margin: var(--space-8) auto;
+    padding: 0 var(--space-6);
+    animation: slideUp 0.5s ease-out;
+}
+
+/* Card */
+.card {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow);
+    padding: var(--space-6);
+    transition: all var(--transition) ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, var(--primary), var(--primary-hover));
+    opacity: 0;
+    transition: opacity var(--transition) ease;
+}
+
+.card:hover::before {
+    opacity: 1;
+}
+
+.card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-lg);
+    border-color: var(--border-hover);
+}
+
+/* Toolbar */
+.toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-3);
+    margin-bottom: var(--space-6);
+    align-items: center;
+}
+
+.toolbar input[type="text"],
+.toolbar select {
+    flex: 1;
+    min-width: 200px;
+}

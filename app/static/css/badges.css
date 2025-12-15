@@ -1,0 +1,163 @@
+/* ==========================================================================
+   Badge Styles - Status indicators
+   ========================================================================== */
+
+/* Full Badge (with text) */
+.badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.3px;
+    transition: all var(--transition) ease;
+    animation: badgeIn 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+
+.badge .icon {
+    width: 14px;
+    height: 14px;
+}
+
+.badge .label {
+    text-transform: capitalize;
+}
+
+.badge.ok {
+    background: linear-gradient(135deg, rgba(16, 185, 129, 0.15), rgba(16, 185, 129, 0.25));
+    border: 1.5px solid rgba(16, 185, 129, 0.5);
+    color: var(--ok);
+    box-shadow: 0 0 15px var(--ok-glow);
+}
+
+.badge.ok .icon {
+    filter: drop-shadow(0 0 4px var(--ok));
+}
+
+.badge.warn {
+    background: linear-gradient(135deg, rgba(245, 158, 11, 0.15), rgba(245, 158, 11, 0.25));
+    border: 1.5px solid rgba(245, 158, 11, 0.5);
+    color: var(--warn);
+    box-shadow: 0 0 15px var(--warn-glow);
+}
+
+.badge.warn .icon {
+    filter: drop-shadow(0 0 4px var(--warn));
+    animation: shake 2s ease-in-out infinite;
+}
+
+.badge.error {
+    background: linear-gradient(135deg, rgba(239, 68, 68, 0.15), rgba(239, 68, 68, 0.25));
+    border: 1.5px solid rgba(239, 68, 68, 0.5);
+    color: var(--error);
+    box-shadow: 0 0 15px var(--error-glow);
+}
+
+.badge.error .icon {
+    filter: drop-shadow(0 0 4px var(--error));
+    animation: pulse-error 1.5s ease-in-out infinite;
+}
+
+.badge.unknown {
+    background: linear-gradient(135deg, rgba(107, 114, 128, 0.15), rgba(107, 114, 128, 0.25));
+    border: 1.5px solid rgba(107, 114, 128, 0.4);
+    color: var(--unknown);
+    box-shadow: 0 0 10px var(--unknown-glow);
+}
+
+.badge.processing {
+    background: linear-gradient(135deg, rgba(59, 130, 246, 0.15), rgba(59, 130, 246, 0.25));
+    border: 1.5px solid rgba(59, 130, 246, 0.5);
+    color: var(--processing);
+    box-shadow: 0 0 20px var(--processing-glow);
+    animation: pulse-processing 2s ease-in-out infinite;
+}
+
+/* Icon-only Badge */
+.badge-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    transition: all var(--transition) ease;
+    animation: badgeIn 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+    cursor: pointer;
+}
+
+.badge-icon:hover {
+    transform: scale(1.15);
+}
+
+.badge-icon .icon {
+    width: 18px;
+    height: 18px;
+}
+
+.badge-icon.ok {
+    background: linear-gradient(135deg, rgba(16, 185, 129, 0.2), rgba(16, 185, 129, 0.3));
+    color: var(--ok);
+    box-shadow: 0 0 12px var(--ok-glow);
+}
+
+.badge-icon.ok:hover {
+    box-shadow: 0 0 20px var(--ok-glow);
+}
+
+.badge-icon.ok .icon {
+    filter: drop-shadow(0 0 3px var(--ok));
+}
+
+.badge-icon.warn {
+    background: linear-gradient(135deg, rgba(245, 158, 11, 0.2), rgba(245, 158, 11, 0.3));
+    color: var(--warn);
+    box-shadow: 0 0 12px var(--warn-glow);
+}
+
+.badge-icon.warn:hover {
+    box-shadow: 0 0 20px var(--warn-glow);
+}
+
+.badge-icon.warn .icon {
+    filter: drop-shadow(0 0 3px var(--warn));
+    animation: shake 2s ease-in-out infinite;
+}
+
+.badge-icon.error {
+    background: linear-gradient(135deg, rgba(239, 68, 68, 0.2), rgba(239, 68, 68, 0.3));
+    color: var(--error);
+    box-shadow: 0 0 12px var(--error-glow);
+}
+
+.badge-icon.error:hover {
+    box-shadow: 0 0 20px var(--error-glow);
+}
+
+.badge-icon.error .icon {
+    filter: drop-shadow(0 0 3px var(--error));
+    animation: pulse-error 1.5s ease-in-out infinite;
+}
+
+.badge-icon.unknown {
+    background: linear-gradient(135deg, rgba(107, 114, 128, 0.2), rgba(107, 114, 128, 0.3));
+    color: var(--unknown);
+    box-shadow: 0 0 10px var(--unknown-glow);
+}
+
+.badge-icon.unknown:hover {
+    box-shadow: 0 0 16px var(--unknown-glow);
+}
+
+.badge-icon.processing {
+    background: linear-gradient(135deg, rgba(59, 130, 246, 0.2), rgba(59, 130, 246, 0.3));
+    color: var(--processing);
+    box-shadow: 0 0 15px var(--processing-glow);
+    animation: pulse-processing 2s ease-in-out infinite;
+}
+
+.badge-icon.processing:hover {
+    box-shadow: 0 0 25px var(--processing-glow);
+}

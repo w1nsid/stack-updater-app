@@ -1,0 +1,58 @@
+/* ==========================================================================
+   Base Styles - Reset & Global Elements
+   ========================================================================== */
+
+* {
+    box-sizing: border-box;
+}
+
+html,
+body {
+    height: 100%;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: var(--font);
+    background: var(--bg-gradient);
+    background-attachment: fixed;
+    color: var(--text);
+    line-height: 1.6;
+    overflow-x: hidden;
+    animation: fadeIn 0.5s ease-in;
+}
+
+h1 {
+    margin: 0 0 var(--space-6);
+    font-size: 28px;
+    font-weight: 700;
+    background: linear-gradient(135deg, var(--text) 0%, var(--muted) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+::selection {
+    background: var(--primary-glow);
+    color: white;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+}
+
+::-webkit-scrollbar-track {
+    background: var(--panel);
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--border);
+    border-radius: 5px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: var(--muted);
+}

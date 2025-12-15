@@ -141,14 +141,11 @@ class StackService:
         stack = self._db.get(Stack, stack_id)
         return StackDTO.from_model(stack) if stack else None
 
-    def get_stack_model(self, stack_id: int) -> Optional[Stack]:
-        """Get raw Stack model (for internal use)."""
-        return self._db.get(Stack, stack_id)
-
     def get_auto_update_stacks(self) -> List[StackDTO]:
         """Get all stacks with auto-update enabled that are outdated."""
         stacks = self._db.query(Stack).filter(
-            Stack.auto_update_enabled == True, Stack.image_status == ImageStatus.OUTDATED.value
+            Stack.auto_update_enabled == True,  # noqa: E712
+            Stack.image_status == ImageStatus.OUTDATED.value
         ).all()
         return [StackDTO.from_model(s) for s in stacks]
 
@@ -235,11 +232,11 @@ class StackService:
     async def refresh_indicator(self, stack_id: int, force_refresh: bool = False) -> UpdateResult:
         """
         Refresh the image indicator for a single stack from Portainer API.
-        
+
         Args:
             stack_id: The stack ID
             force_refresh: If True, ask Portainer to re-check images (slower but fresh)
-            
+
         Returns:
             UpdateResult with success status and updated stack data
         """
@@ -272,7 +269,7 @@ class StackService:
     async def refresh_all_indicators(self, force_refresh: bool = False) -> Dict[str, Any]:
         """
         Refresh indicators for all stacks.
-        
+
         Returns dict with success/failure counts.
         """
         stacks = self._db.query(Stack).all()
@@ -299,7 +296,7 @@ class StackService:
     async def trigger_update(self, stack_id: int) -> UpdateResult:
         """
         Trigger a stack update via webhook.
-        
+
         Returns UpdateResult with success status.
         """
         stack = self._db.get(Stack, stack_id)
@@ -337,11 +334,12 @@ class StackService:
     async def run_auto_updates(self) -> Dict[str, Any]:
         """
         Run auto-updates for all eligible stacks (auto_update_enabled + outdated).
-        
+
         Returns dict with counts of updated stacks.
         """
         stacks = self._db.query(Stack).filter(
-            Stack.auto_update_enabled == True, Stack.image_status == ImageStatus.OUTDATED.value
+            Stack.auto_update_enabled == True,  # noqa
+            Stack.image_status == ImageStatus.OUTDATED.value  # noqa
         ).all()
 
         updated_count = 0

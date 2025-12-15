@@ -26,7 +26,6 @@ class Settings:
 
     # Background tasks
     refresh_interval_seconds: int = int(os.getenv("REFRESH_INTERVAL", "30"))
-    outdated_after_seconds: int = int(os.getenv("OUTDATED_AFTER_SECONDS", "86400"))
 
     # Cloudflare Access (optional)
     cf_access_client_id: str | None = os.getenv("CF_ACCESS_CLIENT_ID")

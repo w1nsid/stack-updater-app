@@ -1,0 +1,94 @@
+/* ==========================================================================
+   CSS Variables - Design Tokens
+   ========================================================================== */
+
+:root {
+    /* Colors - Dark Theme (default) */
+    --bg: #0a0e1a;
+    --bg-gradient: linear-gradient(135deg, #0a0e1a 0%, #151b2e 100%);
+    --panel: #141824;
+    --panel-2: #1a2030;
+    --panel-hover: #1e2537;
+    --text: #e8eef5;
+    --text-secondary: #a0aec0;
+    --muted: #8895a8;
+    --border: #2d3748;
+    --border-hover: #3d4758;
+
+    /* Status Colors */
+    --primary: #6366f1;
+    --primary-hover: #7c3aed;
+    --primary-glow: rgba(99, 102, 241, 0.4);
+    --ok: #10b981;
+    --ok-glow: rgba(16, 185, 129, 0.3);
+    --warn: #f59e0b;
+    --warn-glow: rgba(245, 158, 11, 0.3);
+    --error: #ef4444;
+    --error-glow: rgba(239, 68, 68, 0.3);
+    --processing: #3b82f6;
+    --processing-glow: rgba(59, 130, 246, 0.3);
+    --unknown: #6b7280;
+    --unknown-glow: rgba(107, 114, 128, 0.3);
+
+    /* Shadows */
+    --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.3);
+    --shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+    --shadow-lg: 0 16px 48px rgba(0, 0, 0, 0.5);
+    --glow: 0 0 20px var(--primary-glow);
+
+    /* Spacing */
+    --radius: 16px;
+    --radius-sm: 10px;
+    --radius-lg: 20px;
+    --space-1: 4px;
+    --space-2: 8px;
+    --space-3: 12px;
+    --space-4: 16px;
+    --space-5: 20px;
+    --space-6: 24px;
+    --space-8: 32px;
+
+    /* Typography */
+    --font: system-ui, -apple-system, "Segoe UI", Roboto, "Inter", Helvetica, Arial, sans-serif;
+
+    /* Transitions */
+    --transition-fast: 150ms;
+    --transition: 250ms;
+    --transition-slow: 400ms;
+}
+
+/* Light theme via system preference */
+@media (prefers-color-scheme: light) {
+    :root {
+        --bg: #f5f7fa;
+        --bg-gradient: linear-gradient(135deg, #f5f7fa 0%, #e8ebf0 100%);
+        --panel: #ffffff;
+        --panel-2: #f9fafb;
+        --panel-hover: #f3f4f6;
+        --text: #1a202c;
+        --text-secondary: #4a5568;
+        --muted: #718096;
+        --border: #e2e8f0;
+        --border-hover: #cbd5e0;
+        --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.08);
+        --shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
+        --shadow-lg: 0 16px 48px rgba(0, 0, 0, 0.16);
+    }
+}
+
+/* Light theme via data attribute */
+[data-theme="light"] {
+    --bg: #f5f7fa;
+    --bg-gradient: linear-gradient(135deg, #f5f7fa 0%, #e8ebf0 100%);
+    --panel: #ffffff;
+    --panel-2: #f9fafb;
+    --panel-hover: #f3f4f6;
+    --text: #1a202c;
+    --text-secondary: #4a5568;
+    --muted: #718096;
+    --border: #e2e8f0;
+    --border-hover: #cbd5e0;
+    --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.08);
+    --shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
+    --shadow-lg: 0 16px 48px rgba(0, 0, 0, 0.16);
+}

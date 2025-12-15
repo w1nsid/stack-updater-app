@@ -1,0 +1,112 @@
+/* ==========================================================================
+   Table Styles
+   ========================================================================== */
+
+.table-wrapper {
+    border-radius: var(--radius);
+    overflow: hidden;
+    border: 1px solid var(--border);
+    background: var(--panel-2);
+    box-shadow: var(--shadow-sm);
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+thead {
+    background: linear-gradient(135deg, var(--panel) 0%, var(--panel-2) 100%);
+    position: sticky;
+    top: 0;
+    z-index: 10;
+}
+
+thead th {
+    text-align: left;
+    font-weight: 600;
+    font-size: 13px;
+    color: var(--muted);
+    padding: var(--space-4);
+    border-bottom: 2px solid var(--border);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    cursor: pointer;
+    transition: all var(--transition-fast) ease;
+    user-select: none;
+}
+
+thead th:hover {
+    background: var(--panel-hover);
+    color: var(--primary);
+}
+
+tbody td {
+    padding: var(--space-4);
+    border-bottom: 1px solid var(--border);
+    vertical-align: middle;
+    font-size: 14px;
+    transition: all var(--transition-fast) ease;
+}
+
+tbody td[data-col="indicator"] {
+    text-align: center;
+}
+
+tbody tr {
+    transition: all var(--transition) ease;
+    animation: fadeInRow 0.3s ease-out backwards;
+}
+
+tbody tr:nth-child(1) {
+    animation-delay: 0.05s;
+}
+
+tbody tr:nth-child(2) {
+    animation-delay: 0.1s;
+}
+
+tbody tr:nth-child(3) {
+    animation-delay: 0.15s;
+}
+
+tbody tr:nth-child(4) {
+    animation-delay: 0.2s;
+}
+
+tbody tr:nth-child(5) {
+    animation-delay: 0.25s;
+}
+
+tbody tr:hover {
+    background: var(--panel-hover);
+    transform: scale(1.01);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+tbody tr:last-child td {
+    border-bottom: none;
+}
+
+td.name {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    font-weight: 600;
+}
+
+td.name i.muted {
+    width: 20px;
+    height: 20px;
+    color: var(--muted);
+    transition: all var(--transition) ease;
+}
+
+tbody tr:hover td.name i.muted {
+    color: var(--primary);
+    transform: scale(1.1) rotate(5deg);
+}
+
+td.action-buttons {
+    white-space: nowrap;
+}

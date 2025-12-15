@@ -1,0 +1,166 @@
+/* ==========================================================================
+   Button Styles
+   ========================================================================== */
+
+.button,
+button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 10px 16px;
+    background: linear-gradient(135deg, var(--primary), var(--primary-hover));
+    color: #ffffff;
+    border: none;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 600;
+    transition: all var(--transition) cubic-bezier(0.4, 0, 0.2, 1);
+    text-decoration: none;
+    height: 40px;
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+}
+
+.button::before,
+button::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.2);
+    transform: translate(-50%, -50%);
+    transition: width 0.6s, height 0.6s;
+}
+
+.button:hover::before,
+button:hover::before {
+    width: 300px;
+    height: 300px;
+}
+
+.button:hover,
+button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px var(--primary-glow), 0 0 40px var(--primary-glow);
+}
+
+.button:active,
+button:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 8px rgba(99, 102, 241, 0.4);
+}
+
+.button i,
+button i {
+    width: 18px;
+    height: 18px;
+    transition: transform var(--transition) ease;
+}
+
+.button:hover i,
+button:hover i {
+    transform: scale(1.1);
+}
+
+/* Primary variant */
+.button.primary,
+button.primary {
+    background: linear-gradient(135deg, var(--primary), var(--primary-hover));
+}
+
+/* Ghost variant */
+.button.ghost,
+button.ghost {
+    background: transparent;
+    color: var(--text);
+    border: 1.5px solid var(--border);
+    box-shadow: none;
+}
+
+.button.ghost:hover,
+button.ghost:hover {
+    background: var(--panel-hover);
+    border-color: var(--primary);
+    color: var(--primary);
+    box-shadow: 0 0 20px var(--primary-glow);
+}
+
+.button.ghost::before,
+button.ghost::before {
+    background: rgba(99, 102, 241, 0.1);
+}
+
+/* Danger variant */
+.button.danger,
+button.danger {
+    background: linear-gradient(135deg, var(--error), #dc2626);
+    box-shadow: 0 4px 12px var(--error-glow);
+}
+
+.button.danger:hover,
+button.danger:hover {
+    box-shadow: 0 8px 24px var(--error-glow), 0 0 40px var(--error-glow);
+}
+
+/* Disabled state */
+.button:disabled,
+button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none !important;
+    box-shadow: none !important;
+}
+
+/* Icon Button */
+.icon-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    border-radius: var(--radius-sm);
+    border: 1.5px solid var(--border);
+    background: var(--panel-2);
+    color: var(--text);
+    cursor: pointer;
+    transition: all var(--transition) cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    overflow: hidden;
+}
+
+.icon-btn::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, var(--primary), var(--primary-hover));
+    opacity: 0;
+    transition: opacity var(--transition) ease;
+}
+
+.icon-btn:hover {
+    border-color: var(--primary);
+    transform: translateY(-2px) rotate(5deg);
+    box-shadow: 0 8px 20px var(--primary-glow);
+}
+
+.icon-btn:hover::before {
+    opacity: 0.1;
+}
+
+.icon-btn i {
+    width: 20px;
+    height: 20px;
+    position: relative;
+    z-index: 1;
+    transition: transform var(--transition) ease;
+}
+
+.icon-btn:hover i {
+    transform: scale(1.2) rotate(-5deg);
+}

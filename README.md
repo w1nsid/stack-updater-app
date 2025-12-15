@@ -91,7 +91,6 @@ The easiest way to run the application is with Docker Compose:
    
    # Optional - adjust as needed
    REFRESH_INTERVAL=30
-   OUTDATED_AFTER_SECONDS=86400
    VERIFY_SSL=true
    ```
 
@@ -214,7 +213,6 @@ Configuration is done via environment variables (see `.env` file):
 | `PORTAINER_API_KEY` | - | API key with stack read/webhook permissions |
 | `DATABASE_URL` | `sqlite:///./app.db` | SQLAlchemy database connection string |
 | `REFRESH_INTERVAL` | `30` | Seconds between background staleness checks |
-| `OUTDATED_AFTER_SECONDS` | `86400` | Seconds until a stack is marked outdated (default 24h) |
 | `VERIFY_SSL` | `true` | Verify SSL certificates for Portainer API |
 | `CF_ACCESS_CLIENT_ID` | - | Cloudflare Access service token client ID (optional) |
 | `CF_ACCESS_CLIENT_SECRET` | - | Cloudflare Access service token secret (optional) |
