@@ -36,6 +36,17 @@ thead th {
     user-select: none;
 }
 
+thead th:nth-child(2),
+thead th:nth-child(3),
+thead th:nth-child(4) {
+    width: 140px;
+}
+
+thead th:last-child {
+    width: 200px;
+    text-align: right;
+}
+
 thead th:hover {
     background: var(--panel-hover);
     color: var(--primary);
@@ -90,13 +101,17 @@ tbody tr:last-child td {
 
 /* Cell specific styles */
 .cell-name {
-    display: flex;
-    align-items: center;
-    gap: var(--space-3);
     font-weight: 600;
 }
 
-.cell-name .icon-stack {
+.cell-name-inner {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-3);
+}
+
+.cell-name .icon-stack,
+.cell-name-inner .icon-stack {
     width: 20px;
     height: 20px;
     color: var(--muted);
@@ -104,29 +119,35 @@ tbody tr:last-child td {
     flex-shrink: 0;
 }
 
-tbody tr:hover .cell-name .icon-stack {
+tbody tr:hover .cell-name .icon-stack,
+tbody tr:hover .cell-name-inner .icon-stack {
     color: var(--primary);
     transform: scale(1.1) rotate(5deg);
 }
 
 .cell-status {
     text-align: center;
+    width: 140px;
 }
 
 .cell-date {
     color: var(--text-secondary);
     font-size: 13px;
+    width: 140px;
 }
 
 .cell-actions {
     white-space: nowrap;
+    width: 200px;
+    text-align: right;
 }
 
 /* Action buttons group */
 .action-group {
-    display: flex;
+    display: inline-flex;
     gap: var(--space-2);
     align-items: center;
+    justify-content: flex-end;
 }
 
 /* Small button variant for table actions */

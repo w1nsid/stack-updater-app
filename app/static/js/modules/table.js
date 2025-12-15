@@ -64,8 +64,10 @@ export class TableRenderer {
 
         tr.innerHTML = `
             <td class="cell-name">
-                <i data-lucide="layers" class="icon-stack"></i>
-                <span class="stack-name">${escapeHtml(stack.name)}</span>
+                <span class="cell-name-inner">
+                    <i data-lucide="layers" class="icon-stack"></i>
+                    <span class="stack-name">${escapeHtml(stack.name)}</span>
+                </span>
             </td>
             <td class="cell-status" data-col="indicator">
                 ${this.renderBadge(stack.image_status)}
