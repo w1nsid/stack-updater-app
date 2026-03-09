@@ -92,7 +92,7 @@ jobs:
           echo "Extracted version: $VERSION"
 
       - name: Build Docker image
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@v7
         with:
           context: .
           push: false
@@ -106,7 +106,7 @@ jobs:
 
       - name: Build and push to GHCR
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@v7
         with:
           context: .
           push: true
