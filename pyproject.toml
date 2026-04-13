@@ -20,7 +20,7 @@ dev = [
     "pytest>=8.0",
     "pytest-asyncio>=0.23",
     "pytest-cov>=4.0",
-    "respx>=0.21",          # Mock httpx requests
+    "respx>=0.23.1",          # Mock httpx requests
     "ruff>=0.8",            # Linting
     "yapf>=0.40",           # Formatting (Facebook style)
 ]
